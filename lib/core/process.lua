@@ -2,7 +2,7 @@
 -- @module process
 -- @alias process
 
-local Deque = include('meso/lib/container/deque')
+local Deque = include('sky/lib/container/deque')
 
 --
 -- Input class (event source)
