@@ -1,4 +1,5 @@
 local table = require('table')
+local Deque = include('sky/lib/container/deque')
 
 --
 -- Held(note) class
@@ -25,14 +26,14 @@ function Held:process(event, output)
 
   -- TODO: implement "hold" mode
 
-  if t == types.NOTE_ON then
+  if t == sky.types.NOTE_ON then
     local k = sky.to_id(event.ch, event.note)
     local e = self._tracking[k]
     if e == nil then
       -- new note on
       self._tracking[k] = {
-	count = 1,
-	event = event,
+	      count = 1,
+	      event = event,
       }
       self._ordering:push_back(k)
       changed = true
@@ -45,13 +46,13 @@ function Held:process(event, output)
     local e = self._tracking[k]
     if e ~= nil then
       if e.count == 1 then
-	-- last note lifted
-	self._tracking[k] = nil
-	self._ordering:remove(k)
-	changed = true
+	      -- last note lifted
+	      self._tracking[k] = nil
+	      self._ordering:remove(k)
+	      changed = true
       else
-	-- decrement count
-	e.count = e.count - 1
+	      -- decrement count
+	      e.count = e.count - 1
       end
     end
   else
@@ -64,7 +65,9 @@ function Held:process(event, output)
     for i, k in self._ordering:ipairs() do
       local e = self._tracking[k]
       -- print(i, k, e)
-      held[i] = e.event
+      if e then
+        held[i] = e.event
+      end
     end
 
     -- debug
@@ -122,7 +125,11 @@ end
 
 function Pattern.builder.up(notes)
   local cmp = function(a, b)
-    return a.note < b.note
+    if b then
+      -- sometimes b is nil?
+      return a.note < b.note
+    end
+    return true
   end
   -- MAINT: in-place sort so note order is lost
   table.sort(notes, cmp)
@@ -181,12 +188,12 @@ end
 function Arp:process(event, output, state)
   if event.type == Pattern.EVENT then
     -- capture and queue up new pattern
-    print("arp got pattern change")
+    --print("arp got pattern change")
     self:set_pattern(event.value)
     return
   end
 
-  if is_clock(event) then
+  if sky.is_clock(event) then
     local last = self._last
     if last ~= nil then
       -- kill previous
@@ -202,14 +209,14 @@ function Arp:process(event, output, state)
       self._last = next
       n = n + 1
       if n > self._length then
-	self._step = 1
+	      self._step = 1
       else
-	self._step = n
+	      self._step = n
       end
     end
   end
 
-  if is_note(event) then
+  if sky.is_note(event) then
     -- don't pass notes
     return
   end
