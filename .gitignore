@@ -1,3 +1,6 @@
+# maiden meta-data
+.project
+
 # Compiled Lua sources
 luac.out
 
