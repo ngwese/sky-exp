@@ -2,7 +2,7 @@
 -- @module process
 -- @alias process
 
-local Deque = include('sky/lib/container/deque')
+local Deque = sky.use('sky/lib/container/deque')
 
 --
 -- Input class (event source)
@@ -34,8 +34,8 @@ function Input.new(o)
   end
 
   if o.device == nil then
-    print("warning: input not connected to device " .. o.name )
-    return o
+    local n = o.name or "<none>"
+    print("warning: input not connected to device " .. n)
   end
 
   -- install device event handler
@@ -86,8 +86,25 @@ Output.__index = Output
 function Output.new(o)
   local o = setmetatable(o or {}, Output)
 
-  -- defaults
-  o.device = o.device or midi.connect(2)
+  -- determine which device to use
+  if not o.device then
+    if o.name then
+      -- attempt to find the midi device by name
+      for i,v in ipairs(midi.vports) do
+        if sky.starts_with(v.name, o.name) then
+          o.device = midi.connect(i)
+        end
+      end
+    else
+      o.device = midi.connect(2)
+    end
+  end
+
+  if o.device == nil then
+    local n = o.name or "<none>"
+    print("warning: output not connected to device " .. n)
+  end
+
   if type(o.enabled) ~= "boolean" then
     o.enabled = true
   end
@@ -171,7 +188,7 @@ end
 
 function Clock:cleanup()
   -- ?? metros do need deallocation?
-  self.metro.stop()
+  self.metro:stop()
 end
 
 
