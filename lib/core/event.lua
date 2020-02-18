@@ -116,7 +116,7 @@ local function to_string(event)
 
   for k,v in pairs(event) do
     if k ~= "type" then
-      e = e .. ', ' .. k .. ' ' .. v
+      e = e .. ', ' .. k .. ' ' .. tostring(v)
     end
   end
   return e
