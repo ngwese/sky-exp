@@ -16,10 +16,10 @@ function Switcher.new(o)
   return o
 end
 
-function Switcher:process(event, output)
+function Switcher:process(event, output, state)
   local chain = self[self.which]
   if chain ~= nil then
-    chain:process(event, output)
+    chain:process(event, output, state)
   end
 end
 
