@@ -1,30 +1,19 @@
-local sky = include('sky/lib/prelude')
-
+include('sky/lib/prelude')
 sky.use('sky/lib/device/transpose')
+sky.use('sky/lib/engine/polysub')
 
-engine.name = 'SimplePassThru'
+t = sky.Transpose{ semitones = 12 }
 
-t = sky.Transpose{ semitones = 0 }
-
-local chain = sky.Chain{
-  t,
-  sky.Logger{},
-  sky.Output{ device = midi.connect(2) },
-}
-
-local source = sky.Input{
-  --device = midi.connect(1),
+source = sky.Input{
   name = "AXIS-64 USB Keyboard",
-  chain = chain,
+  chain = sky.Chain{ sky.Send("keys") },
 }
 
-local clk = sky.Clock{
-  interval = sky.bpm_to_sec(30, 4),
-  chain = chain,
-}
+c1 = sky.Receive("keys", sky.Chain{ sky.Send("out") })
+c2 = sky.Receive("keys", sky.Chain{ t, sky.Send("out") })
+sink = sky.Receive("out", sky.Chain{ sky.Logger{}, sky.PolySub{} })
 
 function init()
-  --clk:start()
 end
 
 function redraw()
@@ -33,6 +22,5 @@ function redraw()
 end
 
 function cleanup()
-  --clk:cleanup()
   source:cleanup()
 end

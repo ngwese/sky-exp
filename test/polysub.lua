@@ -1,5 +1,4 @@
-local sky = include('sky/lib/prelude')
-
+include('sky/lib/prelude')
 sky.use('sky/lib/engine/polysub')
 
 source = sky.Input{
