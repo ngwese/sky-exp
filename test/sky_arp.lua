@@ -1,21 +1,35 @@
 include('sky/lib/prelude')
 sky.use('sky/lib/device/arp')
+sky.use('sky/lib/device/switcher')
 sky.use('sky/lib/engine/polysub')
 
 local halfsecond = include('awake/lib/halfsecond')
 
-logger = sky.Logger{ bypass = true }
+logger = sky.Logger{
+  bypass = false,
+}
 
-chain = sky.Chain{
-  sky.Held{},      -- track held notes, emit on change
-  sky.Pattern{},   -- generate pattern when held notes change
-  sky.Arp{},       -- generate notes from pattern
-  logger,
+out1 = sky.Switcher{
+  which = 1,
+  sky.Output{ name = "UM-ONE" },
   sky.PolySub{},
 }
 
-input = sky.Input{
+chain = sky.Chain{
+  sky.Held{ debug = true },      -- track held notes, emit on change
+  sky.Pattern{ debug = true },   -- generate pattern when held notes change
+  sky.Arp{},       -- generate notes from pattern
+  logger,
+  out1,
+}
+
+in1 = sky.Input{
   name = "AXIS-64 USB Keyboard",
+  chain = chain,
+}
+
+in2 = sky.Input{
+  name = "TOUCHE",
   chain = chain,
 }
 
@@ -33,7 +47,7 @@ function init()
   params:set('delay_feedback', 0.27)
   -- polysub
   params:set('amprel', 0.1)
-  
+
   clk:start()
 end
 

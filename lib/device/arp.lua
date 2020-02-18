@@ -1,12 +1,12 @@
 local table = require('table')
-local Deque = include('sky/lib/container/deque')
+local Deque = sky.use('sky/lib/container/deque')
 
 --
 -- Held(note) class
 --
 local Held = {}
 Held.__index = Held
-Held.EVENT = Held
+Held.EVENT = 'HELD'
 
 function Held.new(o)
   local o = setmetatable(o or {}, Held)
@@ -20,6 +20,43 @@ function Held:mk_event(notes)
   return { type = Held.EVENT, notes = notes }
 end
 
+function Held:_track_note_off(event)
+  local changed = false
+  local k = sky.to_id(event.ch, event.note)
+  local e = self._tracking[k]
+  if e ~= nil then
+    if e.count == 1 then
+      -- last note lifted
+      self._tracking[k] = nil
+      self._ordering:remove(k)
+      changed = true
+    else
+      -- decrement count
+      e.count = e.count - 1
+    end
+  end
+  return changed
+end
+
+function Held:_track_note_on(event)
+  local changed = false
+  local k = sky.to_id(event.ch, event.note)
+  local e = self._tracking[k]
+  if e == nil then
+    -- new note on
+    self._tracking[k] = {
+      count = 1,
+      event = event,
+    }
+    self._ordering:push_back(k)
+    changed = true
+  else
+    -- already tracking, increment count, silent change
+    e.count = e.count + 1
+  end
+  return changed
+end
+
 function Held:process(event, output)
   local changed = false
   local t = event.type
@@ -27,34 +64,13 @@ function Held:process(event, output)
   -- TODO: implement "hold" mode
 
   if t == sky.types.NOTE_ON then
-    local k = sky.to_id(event.ch, event.note)
-    local e = self._tracking[k]
-    if e == nil then
-      -- new note on
-      self._tracking[k] = {
-	      count = 1,
-	      event = event,
-      }
-      self._ordering:push_back(k)
-      changed = true
+    if event.vel == 0 then
+      changed = self:_track_note_off(event)
     else
-      -- already tracking, increment count, silent change
-      e.count = e.count + 1
+      changed = self:_track_note_on(event)
     end
   elseif t == sky.types.NOTE_OFF then
-    local k = sky.to_id(event.ch, event.note)
-    local e = self._tracking[k]
-    if e ~= nil then
-      if e.count == 1 then
-	      -- last note lifted
-	      self._tracking[k] = nil
-	      self._ordering:remove(k)
-	      changed = true
-      else
-	      -- decrement count
-	      e.count = e.count - 1
-      end
-    end
+    changed = self:_track_note_off(event)
   else
     -- pass unprocessed events
     output(event)
@@ -89,7 +105,7 @@ end
 --
 local Pattern = {}
 Pattern.__index = Pattern
-Pattern.EVENT = Pattern
+Pattern.EVENT = 'PATTERN'
 Pattern.builder = {}
 
 function Pattern.new(o)
@@ -125,14 +141,12 @@ end
 
 function Pattern.builder.up(notes)
   local cmp = function(a, b)
-    if b then
-      -- sometimes b is nil?
-      return a.note < b.note
-    end
-    return true
+    return a.note < b.note
   end
   -- MAINT: in-place sort so note order is lost
-  table.sort(notes, cmp)
+  if #notes > 1 then
+    table.sort(notes, cmp)
+  end
   return notes
 end
 
@@ -198,6 +212,7 @@ function Arp:process(event, output, state)
     if last ~= nil then
       -- kill previous
       local off = sky.mk_note_off(last.note, last.vel, last.ch)
+      self._last = nil
       output(off)
     end
 
