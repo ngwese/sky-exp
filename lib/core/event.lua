@@ -137,6 +137,10 @@ local function bpm_to_sec(bpm, div)
   return 60.0 / bpm / div
 end
 
+local function is_type(event, event_type)
+  return event.type == event_type
+end
+
 local function is_note(event)
   local t = event.type
   return (t == types.NOTE_ON) or (t == types.NOTE_OFF)
@@ -178,6 +182,7 @@ return {
   to_string = to_string,
   starts_with = starts_with,
   bpm_to_sec = bpm_to_sec,
+  is_type = is_type,
   is_note = is_note,
   is_clock = is_clock,
   is_transport = is_transport,
