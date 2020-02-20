@@ -9,7 +9,7 @@ local halfsecond = include('awake/lib/halfsecond')
 g = grid.connect()
 
 logger = sky.Logger{
-  bypass = true,
+  --bypass = true,
 }
 
 out1 = sky.Switcher{
@@ -19,14 +19,20 @@ out1 = sky.Switcher{
 }
 
 chain = sky.Chain{
-  sky.esNoteGesture{},
-  sky.esNoteRender{ grid = g, brightness = 4 },
-  sky.Held{},      -- track held notes, emit on change
-  sky.Pattern{},   -- generate pattern when held notes change
-  sky.Arp{},       -- generate notes from pattern
+  sky.GridGestureRegion{
+    --bounds = {4,1,12,8},
+    --logger,
+    sky.esNoteGesture{},
+  },
+  --sky.Held{},      -- track held notes, emit on change
+  --sky.Pattern{},   -- generate pattern when held notes change
+  --sky.Arp{},       -- generate notes from pattern
   logger,
-  sky.esNoteRender{ grid = g, brightness = 6 },
-  out1,
+  sky.GridDisplay{
+    grid = g,
+    sky.esNoteRender{},
+  },
+  --out1,
 }
 
 in1 = sky.Input{
@@ -54,7 +60,7 @@ function init()
   -- polysub
   params:set('amprel', 0.1)
 
-  clk:start()
+  --clk:start()
 end
 
 function redraw()
