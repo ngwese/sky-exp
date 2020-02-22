@@ -53,14 +53,15 @@ function Logger.new(props)
   return o
 end
 
-function Logger:process(event, output)
+function Logger:process(event, output, state)
   if not self.bypass then
+    local c = state.process_count
     if self.filter then
       if not self.filter(event) then
-        print(sky.to_string(event))
+        print(c, sky.to_string(event))
       end
     else
-      print(sky.to_string(event))
+      print(c, sky.to_string(event))
     end
   end
   -- always output incoming event
