@@ -182,6 +182,19 @@ local function is_transport(event)
       or (t == types.CONTINUE))
 end
 
+local function matcher(props)
+  return function(event)
+    local matches = true
+    for k,v in pairs(props) do
+      matches = event[k] == v
+      if not matches then
+        return matches
+      end
+    end
+    return matches
+  end
+end
+
 --
 -- module
 --
@@ -215,6 +228,7 @@ return {
   is_note = is_note,
   is_clock = is_clock,
   is_transport = is_transport,
+  matcher = matcher,
 
   -- data
   types = types,

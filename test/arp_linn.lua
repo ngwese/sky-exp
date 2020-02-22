@@ -2,7 +2,9 @@ include('sky/lib/prelude')
 sky.use('sky/lib/device/arp')
 sky.use('sky/lib/device/switcher')
 sky.use('sky/lib/engine/polysub')
+sky.use('sky/lib/io/norns')
 sky.use('sky/lib/io/grid')
+sky.use('sky/lib/device/ui')
 sky.use('sky/lib/device/linn')
 
 local halfsecond = include('awake/lib/halfsecond')
@@ -54,6 +56,22 @@ clk = sky.Clock{
   interval = sky.bpm_to_sec(120, 4),
   chain = chain,
 }
+
+ui = sky.NornsInput{
+  chain = sky.Chain{
+    sky.Toggle{
+      match = sky.matcher{ type = sky.KEY_EVENT, num = 3 },
+      action = function(state) arp1.bypass = state end,
+    },
+    sky.Toggle{
+      match = sky.matcher{ type = sky.KEY_EVENT, num = 2},
+      action = function(state)
+        if state then out1.which = 1 else out1.which = 2 end
+      end,
+    },
+  }
+}
+
 
 function init()
   halfsecond.init()
