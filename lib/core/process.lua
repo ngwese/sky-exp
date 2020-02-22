@@ -73,7 +73,7 @@ end
 -- perminantly remove this input from receiving further events
 function Input:cleanup()
   self:disable()
-  if self.device then
+  if self.device and self.device.cleanup then
     self.device:cleanup()
   end
 end
@@ -115,7 +115,7 @@ end
 
 function Output:process(event, output)
   local t = event.type
-  if self.enabled and (t ~= nil) then
+  if self.enabled and self.device and (t ~= nil) then
     -- filter out non-midi events
     if sky.type_names[t] ~= nil then
       self.device:send(event)
@@ -212,7 +212,7 @@ function Chain.new(devices)
     end
   end
 
-  o._state = {}
+  o._state = { process_count = 0 }
   o._buffers = { Deque.new(), Deque.new() }
   return o
 end
@@ -223,6 +223,8 @@ function Chain:process(event)
   end
 
   local state = self._state
+  state.process_count = state.process_count + 1
+
   local source = self._buffers[1]
   local sink = self._buffers[2]
 
