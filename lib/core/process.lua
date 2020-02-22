@@ -217,6 +217,18 @@ function Chain.new(devices)
   return o
 end
 
+function Chain:init()
+  self:process(sky.mk_script_init())
+end
+
+function Chain:redraw()
+  self:process(sky.mk_script_redraw())
+end
+
+function Chain:cleanup()
+  self:process(sky.mk_script_cleanup())
+end
+
 function Chain:process(event)
   if self.bypass then
     return
@@ -288,7 +300,7 @@ Group.__index = Group
 
 function Group.new(props)
   local o = setmetatable({}, Group)
-  o.bypass = false
+  o.bypass = props.bypass or false
   o.source = Deque.new()
   o.sink = Deque.new()
   o.devices = {}

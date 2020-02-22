@@ -11,9 +11,12 @@ local types = {
   START = 'start',
   STOP = 'stop',
   CONTINUE = 'continue',
-
-  -- extended types
 }
+
+-- extended types
+SCRIPT_INIT_EVENT = 'script_init'
+SCRIPT_REDRAW_EVENT = 'script_redraw'
+SCRIPT_CLEANUP_EVENT = 'script_cleanup'
 
 -- invert type table for printing
 local function invert(t)
@@ -70,6 +73,18 @@ end
 
 local function mk_continue(ch)
   return { type = types.CONTINUE, ch = ch or 1 }
+end
+
+local function mk_script_init()
+  return { type = SCRIPT_INIT_EVENT }
+end
+
+local function mk_script_redraw()
+  return { type = SCRIPT_REDRAW_EVENT }
+end
+
+local function mk_script_cleanup()
+  return { type = SCRIPT_CLEANUP_EVENT }
 end
 
 --
@@ -184,6 +199,9 @@ return {
   mk_start = mk_start,
   mk_stop = mk_stop,
   mk_continue = mk_continue,
+  mk_script_init = mk_script_init,
+  mk_script_redraw = mk_script_redraw,
+  mk_script_cleanup = mk_script_cleanup,
 
   -- helpers
   to_hz = to_hz,
@@ -201,4 +219,8 @@ return {
   -- data
   types = types,
   type_names = type_names,
+
+  SCRIPT_INIT_EVENT = SCRIPT_INIT_EVENT,
+  SCRIPT_REDRAW_EVENT = SCRIPT_REDRAW_EVENT,
+  SCRIPT_CLEANUP_EVENT = SCRIPT_CLEANUP_EVENT,
 }
