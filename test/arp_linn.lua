@@ -26,7 +26,7 @@ out1 = sky.Switcher{
 
 arp1 = sky.Group{
   bypass = false,
-  sky.Held{},      -- track held notes, emit on change
+  sky.Held{ debug = true },      -- track held notes, emit on change
   sky.Pattern{},   -- generate pattern when held notes change
   sky.Arp{},       -- generate notes from pattern
 }
@@ -61,7 +61,7 @@ in3 = sky.Input{
       match = sky.matcher{ type = sky.types.CONTROL_CHANGE, cc = 17 },
       action = function(e)
         e.cc = 52 -- dsi evolver lpf frequency
-        e.val = math.floor(util.linlin(0, 127, 10, 127, e.val))
+        e.val = math.floor(util.linlin(0, 127, 23, 127, e.val))
         return e
       end,
     },
@@ -78,14 +78,25 @@ ui = sky.NornsInput{
   chain = sky.Chain{
     sky.Toggle{
       match = sky.matcher{ type = sky.KEY_EVENT, num = 3 },
-      action = function(state) arp1.bypass = state end,
+      action = function(state)
+        arp1.devices[1].hold = state
+        print('arp1.devices[1].hold = ', state)
+      end,
     },
     sky.Toggle{
       match = sky.matcher{ type = sky.KEY_EVENT, num = 2},
       action = function(state)
-        if state then out1.which = 1 else out1.which = 2 end
+        if state then out1.which = 2 else out1.which = 1 end
+        print('out1.which = ', out1.which)
       end,
     },
+    sky.Toggle{
+      match = sky.matcher{ type = sky.KEY_EVENT, num = 1},
+      action = function(state)
+        arp1.bypass = state
+        print('arp1.bypass = ', state)
+      end,
+    }
   }
 }
 
@@ -100,8 +111,10 @@ function init()
   -- polysub
   params:set('amprel', 0.1)
 
-  clk:start()
+  ui.chain:init()
   main:init()
+
+  clk:start()
 end
 
 function redraw()

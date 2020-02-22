@@ -8,11 +8,25 @@ local Held = {}
 Held.__index = Held
 Held.EVENT = 'HELD'
 
-function Held.new(o)
-  local o = setmetatable(o or {}, Held)
+function Held.new(props)
+  local o = setmetatable({}, Held)
+  o.debug = props.debug or false
+  o._hold = props.hold or false
+  o._hold_count = 0
+  o._hold_should_reset = false
+  o._hold_has_changed = false
   o._ordering = Deque.new()
-  o.debug = o.debug or false
   return o
+end
+
+function Held.__newindex(o, k, v)
+  -- catch changes to 'hold' property, signal reset when hold is false
+  if k == 'hold' then
+    rawset(o, '_hold', v)
+    if not v then o:reset() end
+  else
+    rawset(o, k, v)
+  end
 end
 
 function Held:mk_event(notes)
@@ -23,18 +37,36 @@ function Held.is_match(a, b)
   return (a.ch == b.ch) and (a.note == b.note)
 end
 
+function Held:reset()
+  self._ordering:clear()
+  self._hold_count = 0
+  self._hold_should_reset = false
+  self._hold_has_changed = true
+end
+
 function Held:track_note_off(event)
-  local match = self._ordering:remove(event, self.is_match)
-  -- print("track off: ")
-  -- for i,v in ipairs(self._ordering:to_array()) do
-  --   print(i, '\t', sky.to_string(v))
-  -- end
-  return match ~= nil
+  if self._hold and self._ordering:contains(event, self.is_match) then
+    self._hold_count = self._hold_count - 1
+    if self._hold_count <= 0 then
+      self._hold_should_reset = true
+      return false
+    end
+  else
+    local match = self._ordering:remove(event, self.is_match)
+    -- print("track off: ")
+    -- for i,v in ipairs(self._ordering:to_array()) do
+    --   print(i, '\t', sky.to_string(v))
+    -- end
+    return match ~= nil
+  end
 end
 
 function Held:track_note_on(event)
-  local k = sky.to_id(event.ch, event.note)
+  if self._hold_should_reset then
+    self:reset()
+  end
   self._ordering:push_back(event)
+  self._hold_count = self._hold_count + 1
   -- print("track on: ")
   -- for i,v in ipairs(self._ordering:to_array()) do
   --   print(i, '\t', sky.to_string(v))
@@ -45,8 +77,6 @@ end
 function Held:process(event, output)
   local changed = false
   local t = event.type
-
-  -- TODO: implement "hold" mode
 
   if t == sky.types.NOTE_ON then
     if event.vel == 0 then
@@ -59,6 +89,13 @@ function Held:process(event, output)
   else
     -- pass unprocessed events
     output(event)
+  end
+
+  -- if hold was changed but no notes have occured since then ensure a new held
+  -- event goes out with the clock
+  if self._hold_has_changed and sky.is_clock(event) then
+    self._hold_has_changed = false
+    changed = true
   end
 
   if changed then
