@@ -4,10 +4,10 @@ Deque = dofile('lib/container/deque.lua')
 function testPush()
   local d = Deque.new()
   d:push('a')
-  T.assertEquals(d[d.first], 'a')
+  T.assertEquals(d._e[d.first], 'a')
   T.assertEquals(d:count(), 1)
   d:push('b')
-  T.assertEquals(d[d.first], 'b')
+  T.assertEquals(d._e[d.first], 'b')
   T.assertEquals(d:count(), 2)
 end
 
@@ -25,10 +25,10 @@ end
 function testPushBack()
   local d = Deque.new()
   d:push_back('a')
-  T.assertEquals(d[d.last], 'a')
+  T.assertEquals(d._e[d.last], 'a')
   T.assertEquals(d:count(), 1)
   d:push_back('b')
-  T.assertEquals(d[d.last], 'b')
+  T.assertEquals(d._e[d.last], 'b')
   T.assertEquals(d:count(), 2)
 end
 
@@ -45,8 +45,8 @@ end
 
 function testDequeNewWithElements()
   local d = Deque.new({'a', 'b', 'c'})
-  T.assertEquals(d[d.first], 'a')
-  T.assertEquals(d[d.last], 'c')
+  T.assertEquals(d._e[d.first], 'a')
+  T.assertEquals(d._e[d.last], 'c')
 end
 
 function testClear()
@@ -104,6 +104,29 @@ function testRemoveWithDuplicatesInMiddle()
   T.assertEquals(d:pop(), 'c')
 end
 
+local function match_note_event(a, b)
+  return (a.ch == b.ch) and (a.note == b.note)
+end
+
+function testRemoveWithPredicate()
+  local na = { ch = 1, note = 30 }
+  local nb = { ch = 1, note = 40 }
+  local nc = { ch = 1, note = 50 }
+
+  local d = Deque.new({ na, nb, nc })
+  -- remove, matching front
+  T.assertEquals(d:remove(na, match_note_event), na)
+  -- remove, matching back
+  d:push_back(na)
+  T.assertEquals(d:remove(na, match_note_event), na)
+  T.assertEquals(d:to_array(), { nb, nc })
+
+  -- remove, matching middle
+  d:push(na)
+  T.assertEquals(d:remove(nb, match_note_event), nb)
+  T.assertEquals(d:to_array(), { na, nc })
+end
+
 function testIterEmpty()
   local d = Deque.new()
   for i, v in d:ipairs() do
@@ -131,6 +154,8 @@ function testIterAfterRemove()
   d:remove('b')
   T.assertEquals(d:to_array(), {'a', 'c'})
 end
+
+
 
 
 
