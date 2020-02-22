@@ -127,6 +127,26 @@ function testRemoveWithPredicate()
   T.assertEquals(d:to_array(), { na, nc })
 end
 
+function testContains()
+  local d = Deque.new({'a', 'b', 'c'})
+  T.assertTrue(d:contains('a'))
+  T.assertTrue(d:contains('c'))
+  T.assertTrue(d:contains('b'))
+  T.assertFalse(d:contains('missing'))
+  local thing = d:pop()
+  T.assertFalse(d:contains(thing))
+end
+
+function testContainsWithPredicate()
+  local na = { ch = 1, note = 30 }
+  local nb = { ch = 1, note = 40 }
+  local nc = { ch = 1, note = 50 }
+
+  local d = Deque.new({ na, nb, nc })
+  T.assertTrue(d:contains(na, match_note_event))
+  T.assertFalse(d:contains({ ch = 2, note = 2 }))
+end
+
 function testIterEmpty()
   local d = Deque.new()
   for i, v in d:ipairs() do

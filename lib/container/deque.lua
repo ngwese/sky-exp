@@ -76,12 +76,22 @@ function Deque:pop_back()
   return self:pop_back()
 end
 
-function Deque:remove(value, predicate)
-  if predicate == nil then
-    predicate = function(a, b)
-      return a == b
+local function _eq(a, b)
+  return a == b
+end
+
+function Deque:contains(value, predicate)
+  predicate = predicate or _eq
+  for _, v in self:ipairs() do
+    if predicate(v, value) then
+      return true
     end
   end
+  return false
+end
+
+function Deque:remove(value, predicate)
+  predicate = predicate or _eq
 
   -- optimal case (match head or tail)
   if predicate(self._e[self.first], value) then
