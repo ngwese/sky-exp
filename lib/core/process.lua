@@ -36,6 +36,7 @@ function Input.new(o)
   if o.device == nil then
     local n = o.name or "<none>"
     print("warning: input not connected to device " .. n)
+    return o
   end
 
   -- install device event handler
