@@ -8,6 +8,8 @@ sky.use('sky/lib/device/ui')
 sky.use('sky/lib/device/linn')
 
 local halfsecond = include('awake/lib/halfsecond')
+local util = require('util')
+local math = require('math')
 
 g = grid.connect()
 
@@ -29,7 +31,7 @@ arp1 = sky.Group{
   sky.Arp{},       -- generate notes from pattern
 }
 
-chain = sky.Chain{
+main = sky.Chain{
   sky.GridGestureRegion{
     sky.linnGesture{}
   },
@@ -44,17 +46,32 @@ chain = sky.Chain{
 
 in1 = sky.Input{
   name = "AXIS-49",
-  chain = chain,
+  chain = main,
 }
 
 in2 = sky.GridInput{
   grid = g,
-  chain = chain,
+  chain = main,
+}
+
+in3 = sky.Input{
+  name = "TOUCHE",
+  chain = sky.Chain{
+    sky.Map{
+      match = sky.matcher{ type = sky.types.CONTROL_CHANGE, cc = 17 },
+      action = function(e)
+        e.cc = 52 -- dsi evolver lpf frequency
+        e.val = math.floor(util.linlin(0, 127, 10, 127, e.val))
+        return e
+      end,
+    },
+    sky.Forward(main)
+  },
 }
 
 clk = sky.Clock{
   interval = sky.bpm_to_sec(120, 4),
-  chain = chain,
+  chain = main,
 }
 
 ui = sky.NornsInput{
@@ -84,17 +101,17 @@ function init()
   params:set('amprel', 0.1)
 
   clk:start()
-  chain:init()
+  main:init()
 end
 
 function redraw()
   screen.clear()
   screen.update()
-  chain:redraw()
+  main:redraw()
 end
 
 function cleanup()
-  chain:cleanup()
+  main:cleanup()
   clk:cleanup()
   in1:cleanup()
 end

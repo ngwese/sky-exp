@@ -2,6 +2,7 @@
 --
 -- Func class
 --
+
 local Func = {}
 Func.__index = Func
 
@@ -24,6 +25,7 @@ end
 --
 -- Thru class
 --
+
 local Thru = {}
 Thru.__index = Thru
 
@@ -42,6 +44,7 @@ end
 --
 -- Logger
 --
+
 local tu = require('tabutil')
 
 local Logger = {}
@@ -68,8 +71,34 @@ function Logger:process(event, output, state)
   output(event)
 end
 
+--
+-- Map
+--
+
+local Map = {}
+Map.__index = Map
+
+function Map.new(props)
+  local o = setmetatable(props, Map)
+  o.match = props.match or function(e) return false end
+  o.action = props.action or function(e) return e end
+  return o
+end
+
+function Map:process(event, output, state)
+  if self.match(event) then
+    output(self.action(event))
+  else
+    output(event)
+  end
+end
+
+--
+-- module
+--
 return {
   Func = Func.new,
   Thru = Thru.new,
   Logger = Logger.new,
+  Map = Map.new,
 }

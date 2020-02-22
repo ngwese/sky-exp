@@ -68,9 +68,34 @@ function Send:process(event, output, state)
   end
 end
 
+--
+-- Forward
+--
+
+local Forward = {}
+Forward.__index = Forward
+
+function Forward.new(chain)
+  local o = setmetatable({}, Forward)
+  o.chain = chain
+  return o
+end
+
+function Forward:process(event, output, state)
+  output(event) -- pass events through to this chain
+  if self.chain then
+    self.chain:process(event)
+  end
+end
+
+--
+-- module
+--
+
 return {
   Receive = Receive.new,
   Send = Send.new,
+  Forward = Forward.new,
 }
 
 
