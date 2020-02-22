@@ -45,6 +45,8 @@ end
 
 return {
   NornsInput = shared_instance,
+  KEY_EVENT = KEY_EVENT,
+  ENC_EVENT = ENC_EVENT,
 }
 
 

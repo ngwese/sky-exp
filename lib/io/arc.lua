@@ -140,6 +140,9 @@ return {
 
   -- constants
   TWO_PI = TWO_PI,
+
+  ARC_DIAL_EVENT = ARC_DIAL_EVENT,
+  ARC_ENC_EVENT = ARC_ENC_EVENT,
 }
 
 
