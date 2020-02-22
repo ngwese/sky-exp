@@ -10,7 +10,6 @@ Held.EVENT = 'HELD'
 
 function Held.new(o)
   local o = setmetatable(o or {}, Held)
-  o._tracking = {}
   o._ordering = Deque.new()
   o.debug = o.debug or false
   return o
@@ -20,41 +19,27 @@ function Held:mk_event(notes)
   return { type = Held.EVENT, notes = notes }
 end
 
-function Held:_track_note_off(event)
-  local changed = false
-  local k = sky.to_id(event.ch, event.note)
-  local e = self._tracking[k]
-  if e ~= nil then
-    if e.count == 1 then
-      -- last note lifted
-      self._tracking[k] = nil
-      self._ordering:remove(k)
-      changed = true
-    else
-      -- decrement count
-      e.count = e.count - 1
-    end
-  end
-  return changed
+function Held.is_match(a, b)
+  return (a.ch == b.ch) and (a.note == b.note)
 end
 
-function Held:_track_note_on(event)
-  local changed = false
+function Held:track_note_off(event)
+  local match = self._ordering:remove(event, self.is_match)
+  -- print("track off: ")
+  -- for i,v in ipairs(self._ordering:to_array()) do
+  --   print(i, '\t', sky.to_string(v))
+  -- end
+  return match ~= nil
+end
+
+function Held:track_note_on(event)
   local k = sky.to_id(event.ch, event.note)
-  local e = self._tracking[k]
-  if e == nil then
-    -- new note on
-    self._tracking[k] = {
-      count = 1,
-      event = event,
-    }
-    self._ordering:push_back(k)
-    changed = true
-  else
-    -- already tracking, increment count, silent change
-    e.count = e.count + 1
-  end
-  return changed
+  self._ordering:push_back(event)
+  -- print("track on: ")
+  -- for i,v in ipairs(self._ordering:to_array()) do
+  --   print(i, '\t', sky.to_string(v))
+  -- end
+  return true
 end
 
 function Held:process(event, output)
@@ -65,26 +50,19 @@ function Held:process(event, output)
 
   if t == sky.types.NOTE_ON then
     if event.vel == 0 then
-      changed = self:_track_note_off(event)
+      changed = self:track_note_off(event)
     else
-      changed = self:_track_note_on(event)
+      changed = self:track_note_on(event)
     end
   elseif t == sky.types.NOTE_OFF then
-    changed = self:_track_note_off(event)
+    changed = self:track_note_off(event)
   else
     -- pass unprocessed events
     output(event)
   end
 
   if changed then
-    local held = {}
-    for i, k in self._ordering:ipairs() do
-      local e = self._tracking[k]
-      -- print(i, k, e)
-      if e then
-        held[i] = e.event
-      end
-    end
+    local held = self._ordering:to_array()
 
     -- debug
     if self.debug then
@@ -110,7 +88,7 @@ Pattern.builder = {}
 
 function Pattern.new(o)
   local o = setmetatable(o or {}, Pattern)
-  o.style = o.syle or 'up'
+  o.style = o.syle or 'as_played'
   o.debug = o.debug or false
 
   return o
@@ -154,7 +132,9 @@ function Pattern.builder.down(notes)
   local cmp = function(a, b)
     return a.note > b.note
   end
-  table.sort(notes, cmp)
+  if #notes > 1 then
+    table.sort(notes, cmp)
+  end
   return notes
 end
 
@@ -248,4 +228,7 @@ return {
   Held = Held.new,
   Pattern = Pattern.new,
   Arp = Arp.new,
+  -- exported event types
+  HELD_EVENT = Held.EVENT,
+  PATTERN_EVENT = Pattern.EVENT,
 }

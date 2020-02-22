@@ -3,13 +3,15 @@ sky.use('sky/lib/device/arp')
 sky.use('sky/lib/device/switcher')
 sky.use('sky/lib/engine/polysub')
 sky.use('sky/lib/io/grid')
+sky.use('sky/lib/device/es')
 
 local halfsecond = include('awake/lib/halfsecond')
 
 g = grid.connect()
 
 logger = sky.Logger{
-  --bypass = true,
+  filter = sky.is_clock,
+  bypass = true
 }
 
 out1 = sky.Switcher{
@@ -20,23 +22,21 @@ out1 = sky.Switcher{
 
 chain = sky.Chain{
   sky.GridGestureRegion{
-    --bounds = {4,1,12,8},
-    --logger,
     sky.esNoteGesture{},
   },
-  --sky.Held{},      -- track held notes, emit on change
-  --sky.Pattern{},   -- generate pattern when held notes change
-  --sky.Arp{},       -- generate notes from pattern
+  sky.Held{},      -- track held notes, emit on change
+  sky.Pattern{},   -- generate pattern when held notes change
+  sky.Arp{},       -- generate notes from pattern
   logger,
   sky.GridDisplay{
     grid = g,
     sky.esNoteRender{},
   },
-  --out1,
+  out1,
 }
 
 in1 = sky.Input{
-  name = "AXIS-64",
+  name = "AXIS-49",
   chain = chain,
 }
 
@@ -46,7 +46,7 @@ in2 = sky.GridInput{
 }
 
 clk = sky.Clock{
-  interval = sky.bpm_to_sec(60, 4),
+  interval = sky.bpm_to_sec(120, 4),
   chain = chain,
 }
 
@@ -60,7 +60,7 @@ function init()
   -- polysub
   params:set('amprel', 0.1)
 
-  --clk:start()
+  clk:start()
 end
 
 function redraw()
