@@ -20,13 +20,17 @@ out1 = sky.Switcher{
   sky.PolySub{},
 }
 
+arp1 = sky.Group{
+  sky.Held{},      -- track held notes, emit on change
+  sky.Pattern{},   -- generate pattern when held notes change
+  sky.Arp{},       -- generate notes from pattern
+}
+
 chain = sky.Chain{
   sky.GridGestureRegion{
     sky.esNoteGesture{},
   },
-  sky.Held{},      -- track held notes, emit on change
-  sky.Pattern{},   -- generate pattern when held notes change
-  sky.Arp{},       -- generate notes from pattern
+  arp1,
   logger,
   sky.GridDisplay{
     grid = g,

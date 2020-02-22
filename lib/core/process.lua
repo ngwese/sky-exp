@@ -228,6 +228,10 @@ function Chain:process(event)
   local source = self._buffers[1]
   local sink = self._buffers[2]
 
+  return self._process(event, state, self.devices, source, sink)
+end
+
+function Chain._process(event, state, devices, source, sink)
   source:clear()
   sink:clear()
 
@@ -238,7 +242,7 @@ function Chain:process(event)
   -- populate the source event queue with the event to process
   source:push_back(event)
 
-  for i, processor in ipairs(self.devices) do
+  for i, processor in ipairs(devices) do
     event = source:pop()
     while event do
       -- print("\ndevice:", i, "event:", event, "processor:", processor)
@@ -276,7 +280,35 @@ function Chain:run(events)
   return output:to_array()
 end
 
+--
+-- Group
+--
+local Group = {}
+Group.__index = Group
 
+function Group.new(props)
+  local o = setmetatable({}, Group)
+  o.bypass = false
+  o.source = Deque.new()
+  o.sink = Deque.new()
+  o.devices = {}
+  for _, v in ipairs(props) do
+    table.insert(o.devices, v)
+  end
+  return o
+end
+
+function Group:process(event, output, state)
+  if self.bypass then
+    output(event)
+  else
+    -- process children in the same manner as a chain then output all the results
+    local results = Chain._process(event, state, self.devices, self.source, self.sink)
+    for _, v in results:ipairs() do
+      output(v)
+    end
+  end
+end
 
 --
 -- module
@@ -288,6 +320,7 @@ return {
   Output = Output.new,
   Chain = Chain.new,
   Clock = Clock.new,
+  Group = Group.new,
 
   -- debug
   __input_count = input_count,
