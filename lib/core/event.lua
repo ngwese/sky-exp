@@ -122,6 +122,16 @@ local function to_string(event)
   return e
 end
 
+--- create a shallow copy of the given event
+-- @param event : then event object to clone
+local function clone(event)
+  local new = {}
+  for k,v in pairs(event) do
+    new[k] = v
+  end
+  return new
+end
+
 --- return true if str starts with start (string)
 -- @param str : the string to test
 -- @param start : the string appearing at the beginning
@@ -180,6 +190,7 @@ return {
   to_id = to_id,
   to_bend_range = to_bend_range,
   to_string = to_string,
+  clone = clone,
   starts_with = starts_with,
   bpm_to_sec = bpm_to_sec,
   is_type = is_type,
