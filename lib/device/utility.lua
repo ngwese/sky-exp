@@ -49,18 +49,15 @@ Logger.__index = Logger
 
 function Logger.new(props)
   local o = setmetatable(props, Logger)
-  o.bypass = o.bypass or false
+  o.bypass = props.bypass or false
   return o
 end
 
 function Logger:process(event, output)
   if not self.bypass then
-    -- TODO: insert call to filter here
     if self.filter then
-      local r = nil
-      self.filter:process(event, function(e) r = e end)
-      if r ~= nil then
-        print(sky.to_string(r))
+      if not self.filter(event) then
+        print(sky.to_string(event))
       end
     else
       print(sky.to_string(event))
