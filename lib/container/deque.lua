@@ -91,12 +91,15 @@ function Deque:remove(value, predicate)
   end
 
   -- search for a match and tombstone it
-  for i, v in ipairs(self._e) do
-    if predicate(v, value) then
+  local i = self.first
+  while i <= self.last do
+    local e = self._e[i]
+    if e ~= REMOVED and predicate(e, value) then
       self._e[i] = REMOVED
       self.tombstones = self.tombstones + 1
-      return v
+      return e
     end
+    i = i + 1
   end
 
   return nil
