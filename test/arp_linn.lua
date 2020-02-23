@@ -26,9 +26,11 @@ out1 = sky.Switcher{
 
 arp1 = sky.Group{
   bypass = false,
-  sky.Held{ debug = true },      -- track held notes, emit on change
+  sky.Held{},      -- track held notes, emit on change
   sky.Pattern{},   -- generate pattern when held notes change
-  sky.Arp{},       -- generate notes from pattern
+  sky.Arp{         -- generate notes from pattern
+    mode = sky.ARP_QUEUE_MODE,
+  },       
 }
 
 main = sky.Chain{

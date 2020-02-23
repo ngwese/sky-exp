@@ -53,11 +53,15 @@ function Held:track_note_off(event)
     end
   else
     local match = self._ordering:remove(event, self.is_match)
+    if match ~= nil then
+      self._hold_count = self._hold_count - 1
+      return true
+    end
     -- print("track off: ")
     -- for i,v in ipairs(self._ordering:to_array()) do
     --   print(i, '\t', sky.to_string(v))
     -- end
-    return match ~= nil
+    return false
   end
 end
 
@@ -200,10 +204,14 @@ end
 --
 local Arp = {}
 Arp.__index = Arp
+Arp.ARP_IMMEDIATE_MODE = 'immediate'
+Arp.ARP_QUEUE_MODE = 'queue'
 
-function Arp.new(o)
-  local o = setmetatable(o or {}, Arp)
+function Arp.new(props)
+  local o = setmetatable(props or {}, Arp)
+  o.mode = props.mode or Arp.ARP_IMMEDIATE_MODE
   o._pattern = nil
+  o._next_pattern = nil
   o._step = 1
   o._length = 0
   o._last = nil
@@ -216,12 +224,35 @@ function Arp:set_pattern(notes)
   self._length = #notes
 end
 
+function Arp:queue_pattern(notes)
+  self._next_pattern = notes
+end
+
+function Arp:switch_pattern()
+  --print("switch pattern")
+  self:set_pattern(self._next_pattern)
+  self._next_pattern = nil
+end
+
 function Arp:process(event, output, state)
   if event.type == Pattern.EVENT then
     -- capture and queue up new pattern
     --print("arp got pattern change")
-    self:set_pattern(event.value)
-    return
+    if self.mode == Arp.ARP_IMMEDIATE_MODE then
+      self:set_pattern(event.value)
+      --print("set pattern")
+      return
+    elseif self.mode == Arp.ARP_QUEUE_MODE then
+      if self._length <= 0 then
+        -- fallback case; nothing is playing, just set_patther
+        self:set_pattern(event.value)
+        --print("queue immediate pattern")
+      else
+        self:queue_pattern(event.value)
+        --print("queue pattern")
+      end
+      return
+    end
   end
 
   if sky.is_clock(event) then
@@ -236,11 +267,11 @@ function Arp:process(event, output, state)
     if self._pattern ~= nil and self._length > 0 then
       local n = self._step
       local next = self._pattern[n]
-      -- print("arp", n, to_string(next))
       output(next)
       self._last = next
       n = n + 1
       if n > self._length then
+        if self._next_pattern then self:switch_pattern() end
 	      self._step = 1
       else
 	      self._step = n
@@ -265,6 +296,10 @@ return {
   Held = Held.new,
   Pattern = Pattern.new,
   Arp = Arp.new,
+  -- constants
+  ARP_IMMEDIATE_MODE = Arp.ARP_IMMEDIATE_MODE,
+  ARP_QUEUE_MODE = Arp.ARP_QUEUE_MODE,
+
   -- exported event types
   HELD_EVENT = Held.EVENT,
   PATTERN_EVENT = Pattern.EVENT,
