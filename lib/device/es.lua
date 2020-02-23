@@ -1,4 +1,5 @@
 sky.use('sky/lib/io/grid')
+local Deque = include('sky/lib/container/deque')
 
 ES_DEFAULT_BOUNDS = {1,1,16,8}
 ES_DEFAULT_ROOT_NOTE = 48
@@ -70,6 +71,88 @@ function esNoteGesture:process(event, output, props)
 end
 
 --
+-- esShapeGesture
+--
+local esShapeGesture = {}
+esShapeGesture.__index = esShapeGesture
+esShapeGesture.EVENT = 'ES_SHAPE'
+
+function esShapeGesture.new(props)
+  local o = setmetatable(props, esShapeGesture)
+  o._held = Deque.new()
+  return o
+end
+
+function esShapeGesture.match_key_event(a, b)
+  return (a.local_x == b.local_x) and (a.local_y == b.local_y)
+end
+
+function esShapeGesture:mk_event(shape)
+  return { type = esShapeGesture.EVENT, shape = shape }
+end
+
+function esShapeGesture:search(root, second, third)
+  local next = self._held:ipairs()
+  local _, root = next()
+  local _, second = next()
+  local _, third = next()
+  -- NB: grid y coordinate is inverted; increases from top to bottom
+  -- FIXME: this seems inefficient, there is many cases of redundent tests
+  if (root.local_x == second.local_x) and ((root.local_y - 1) == second.local_y) then
+    -- vertical
+    if third and (second.local_x == third.local_x) and ((second.local_y - 1) == third.local_y) then
+      return self:mk_event(5) -- triple
+    else
+      return self:mk_event(1) -- double
+    end
+  elseif ((root.local_x + 1) == second.local_x) and ((root.local_y - 1) == second.local_y) then
+    -- diagonal up
+    if third and ((second.local_x + 1) == third.local_x) and ((second.local_y - 1) == third.local_y) then
+      return self:mk_event(6)
+    else
+      return self:mk_event(2)
+    end
+  elseif ((root.local_x + 1) == second.local_x) and (root.local_y == second.local_y) then
+    -- horizontal
+    if third and ((second.local_x + 1) == third.local_x) and (second.local_y == third.local_y) then
+      return self:mk_event(7)
+    else
+      return self:mk_event(3)
+    end
+  elseif ((root.local_x + 1) == second.local_x) and ((root.local_y + 1) == second.local_y) then
+    -- diagonal down
+    if third and ((second.local_x + 1) == third.local_x) and ((second.local_y + 1) == third.local_y) then
+      return self:mk_event(8)
+    else
+      return self:mk_event(4)
+    end
+  end
+
+  return nil
+end
+
+function esShapeGesture:process(event, output, props)
+  -- TODO: incorperate timing; optionally ensure match only if the chord occurs
+  -- quickly enough
+  local h = self._held
+  if event.z == 1 then
+    h:push_back(event)
+    local c = h:count()
+    if (c == 2) or (c == 3) then
+      --print('do shape search')
+      local shape = self:search()
+      if shape then
+        output(shape)
+      end
+    end
+  else
+    h:remove(event, self.match_key_event)
+  end
+  output(event)
+end
+
+
+--
 -- esNoteRender
 --
 local esNoteRender = {}
@@ -121,9 +204,17 @@ function esNoteRender:render(event, props)
   end
 end
 
+--
+-- module
+--
+
 return {
   esNoteGesture = esNoteGesture.new,
+  esShapeGesture = esShapeGesture.new,
   esNoteRender = esNoteRender.new,
+
+  -- events
+  ES_SHAPE_EVENT = esShapeGesture.EVENT,
 }
 
 

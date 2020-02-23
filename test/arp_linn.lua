@@ -5,6 +5,7 @@ sky.use('sky/lib/engine/polysub')
 sky.use('sky/lib/io/norns')
 sky.use('sky/lib/io/grid')
 sky.use('sky/lib/device/ui')
+sky.use('sky/lib/device/es')
 sky.use('sky/lib/device/linn')
 
 local halfsecond = include('awake/lib/halfsecond')
@@ -30,12 +31,13 @@ arp1 = sky.Group{
   sky.Pattern{},   -- generate pattern when held notes change
   sky.Arp{         -- generate notes from pattern
     mode = sky.ARP_QUEUE_MODE,
-  },       
+  },
 }
 
 main = sky.Chain{
   sky.GridGestureRegion{
-    sky.linnGesture{}
+    sky.esShapeGesture{},
+    sky.linnGesture{},
   },
   arp1,
   logger,
