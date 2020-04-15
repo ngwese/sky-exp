@@ -1,4 +1,4 @@
-local Event = include('sky/lib/event')
+local Event = include('sky/lib/core/event')
 
 -- for now focus on MIDI Mode 4 ("Mono Mode"), Omni Off, Mono
 
