@@ -126,73 +126,6 @@ function Output:process(event, output)
   output(event)
 end
 
-
---
--- Clock class (event source)
---
-local Clock = {}
-Clock.__index = Clock
-
-function Clock.new(o)
-  local o = setmetatable(o or {}, Clock)
-  if type(o.enabled) ~= "boolean" then
-    o.enabled = true
-  end
-
-  o.ch = o.ch or 0
-
-  if o.metro == nil then
-    o.metro = metro.init()
-  end
-
-  -- setup metro timing and callback
-  o.stage = o.stage or 1
-  o.interval = o.interval or 1
-  o.metro.event = function(stage)
-    o.stage = stage
-    o:fire(stage)
-  end
-
-  return o
-end
-
-function Clock:enable()
-  self.enabled = true
-end
-
-function Clock:disable()
-  self.enabled = false
-end
-
-function Clock:start()
-  -- FIXME: why is the first stage always 1 if the init_stage value is 0?
-  self.metro:start(self.interval, -1, self.stage)
-  self.chain:process(sky.mk_start(self.ch))
-end
-
-function Clock:reset()
-  -- TODO: implement this, reset stage to 0 yet retain the same tempo?
-  -- or immediately reset?
-  self.stage = 0
-end
-
-function Clock:stop()
-  self.metro:stop()
-  self.chain:process(sky.mk_stop(self.ch))
-end
-
-function Clock:fire(stage)
-  if self.enabled then
-    self.chain:process(sky.mk_clock(stage, self.ch))
-  end
-end
-
-function Clock:cleanup()
-  -- ?? metros do need deallocation?
-  self.metro:stop()
-end
-
-
 --
 -- Chain class
 --
@@ -331,7 +264,6 @@ return {
   Input = Input.new,
   Output = Output.new,
   Chain = Chain.new,
-  Clock = Clock.new,
   Group = Group.new,
 
   -- debug

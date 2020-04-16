@@ -59,20 +59,20 @@ local function mk_control_change(cc, val, ch)
   return { type = types.CONTROL_CHANGE, ch = ch or 1, cc = cc, val = val }
 end
 
-local function mk_clock(stage, ch)
-  return { type = types.CLOCK, ch = ch or 1, stage = stage }
+local function mk_clock(tick, source)
+  return { type = types.CLOCK, tick = tick, source = source }
 end
 
-local function mk_start(ch)
-  return { type = types.START, ch = ch or 1 }
+local function mk_start(source)
+  return { type = types.START, source = source }
 end
 
-local function mk_stop(ch)
-  return { type = types.STOP, ch = ch or 1 }
+local function mk_stop(source)
+  return { type = types.STOP, source = source }
 end
 
-local function mk_continue(ch)
-  return { type = types.CONTINUE, ch = ch or 1 }
+local function mk_continue(source)
+  return { type = types.CONTINUE, source = source }
 end
 
 local function mk_script_init()
