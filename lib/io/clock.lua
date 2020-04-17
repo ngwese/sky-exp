@@ -14,12 +14,30 @@ function Clock.new(o)
 end
 
 function Clock:start()
+  if self._id ~= nil then
+    clock.cancel(self._id)
+  end
   self._id = clock.run(function()
     self:emit(sky.mk_start(self))
     while true do
       self._tick = self._tick + 1
       self:emit(sky.mk_clock(self._tick, self))
       clock.sleep(self.interval)
+    end
+  end)
+end
+
+function Clock:start_sync(source)
+  if self._id ~= nil then
+    clock.cancel(self._id)
+  end
+  self._id = clock.run(function()
+    clock.set_source(source)
+    self:emit(sky.mk_start(self))
+    while true do
+      self._tick = self._tick + 1
+      self:emit(sky.mk_clock(self._tick, self))
+      clock.sync(self.interval)
     end
   end)
 end
@@ -49,17 +67,20 @@ end
 local SystemClock = {}
 SystemClock.__index = SystemClock
 
--- FIXME: make singleton?
+local singleton_system_clock = nil
 
 function SystemClock.new(o)
-  local o = setmetatable(o or {}, SystemClock)
-  o.division = o.division or 1
-  o._tick = 0
-  o._id = nil
-  -- wire up transport callbacks
-  clock.transport.start = function() o:start() end
-  clock.transport.stop = function() o:stop() end
-  return o
+  if singleton_system_clock == nil then
+    local o = setmetatable(o or {}, SystemClock)
+    o.division = o.division or 1
+    o._tick = 0
+    o._id = nil
+    -- wire up transport callbacks
+    clock.transport.start = function() o:start() end
+    clock.transport.stop = function() o:stop() end
+    singleton_system_clock = o
+  end
+  return singleton_system_clock
 end
 
 function SystemClock:start()
@@ -68,6 +89,12 @@ function SystemClock:start()
     clock.cancel(self._id)
   end
   self._id = clock.run(function()
+    -- FIXME: this is sub-optimal because if the sync source is changed in the
+    -- menu this clock will need to be stopped and started again to pick up the
+    -- new change. ideally the system level clock params would be observable but
+    -- paramset doesn't afford that currently (only a single action is
+    -- supported)
+    clock.set_source(norns.state.clock.source)
     self:emit(sky.mk_start(self))
     while true do
       self._tick = self._tick + 1
