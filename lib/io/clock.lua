@@ -69,15 +69,25 @@ SystemClock.__index = SystemClock
 
 local singleton_system_clock = nil
 
+-- wire up transport callbacks
+clock.transport.start = function()
+  if singleton_system_clock ~= nil then
+    singleton_system_clock:start()
+  end
+end
+
+clock.transport.stop = function()
+  if singleton_system_clock ~= nil then
+    singleton_system_clock:stop()
+  end
+end
+
 function SystemClock.new(o)
   if singleton_system_clock == nil then
     local o = setmetatable(o or {}, SystemClock)
     o.division = o.division or 1
     o._tick = 0
     o._id = nil
-    -- wire up transport callbacks
-    clock.transport.start = function() o:start() end
-    clock.transport.stop = function() o:stop() end
     singleton_system_clock = o
   end
   return singleton_system_clock
@@ -86,15 +96,10 @@ end
 function SystemClock:start()
   -- FIXME: what should happen if this is called directly?
   if self._id ~= nil then
+    --print("canceling before re-start", self._id)
     clock.cancel(self._id)
   end
   self._id = clock.run(function()
-    -- FIXME: this is sub-optimal because if the sync source is changed in the
-    -- menu this clock will need to be stopped and started again to pick up the
-    -- new change. ideally the system level clock params would be observable but
-    -- paramset doesn't afford that currently (only a single action is
-    -- supported)
-    clock.set_source(norns.state.clock.source)
     self:emit(sky.mk_start(self))
     while true do
       self._tick = self._tick + 1
@@ -102,11 +107,13 @@ function SystemClock:start()
       clock.sync(self.division)
     end
   end)
+  --print("started", self._id)
 end
 
 function SystemClock:stop()
   -- FIXME: what should happen if this is called directly?
   if self._id ~= nil then
+    --print("canceling explict stop", self._id)
     clock.cancel(self._id)
     self._id = nil
     self:emit(sky.mk_stop(self))

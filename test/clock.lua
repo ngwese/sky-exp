@@ -18,5 +18,5 @@ function redraw()
 end
 
 function cleanup()
-  --clk:stop()
+  clk:stop()
 end
