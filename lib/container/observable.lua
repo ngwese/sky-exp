@@ -2,7 +2,29 @@
 -- @module observable
 -- @alias Observable
 
--- reference: https://en.wikipedia.org/wiki/Observer_pattern
+--
+-- WeakTable
+--
+
+local WeakTable = {}
+WeakTable.__index = WeakTable
+WeakTable.__mode = "kv"  --  invoke dark magic: https://www.lua.org/pil/17.html
+
+--- Create a table with weak keys and value
+--
+-- A table with weakly held keys and values allows objects to be added to a
+-- table but it won't prevent those objects from being garbage collected
+--
+-- @tparam table initial Initial table contents, optional.
+-- @treturn table
+function WeakTable.new(t)
+  local t = setmetatable(t or {}, WeakTable)
+  return t
+end
+
+--
+-- Observable (reference: https://en.wikipedia.org/wiki/Observer_pattern)
+--
 
 local Observable = {}
 Observable.__index = Observable
@@ -15,7 +37,7 @@ Observable.__index = Observable
 -- @treturn Observable instance.
 function Observable.new(initial)
   local o = {}
-  o._observers = {}
+  o._observers = WeakTable.new()
   o._value = initial
   setmetatable(o, Observable)
   return o
@@ -76,8 +98,6 @@ end
 function Observable:unregister(observer)
   local existing = self._observers[observer]
   if existing ~= nil then
-    -- FIXME: does this really remove it from the table such that pairs will not
-    -- need to iterate over it?
     self._observers[observer] = nil
     return true
   end
