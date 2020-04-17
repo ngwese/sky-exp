@@ -1,5 +1,3 @@
-local clock = require('clock')
-
 --
 -- Clock (independent, free running)
 --
