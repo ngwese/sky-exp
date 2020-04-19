@@ -9,24 +9,21 @@ shapes = sky.CrowShape{
 
 which = 1
 
+local clock2trig = function(event, output)
+  if sky.is_clock(event) then output(sky.mk_trigger(which))
+  else output(event) end
+end
+
 clk = sky.Clock{
   chain = sky.Chain{
-    -- transform clock events to trigger events
-    sky.Func(function(event, output)
-      if sky.is_clock(event) then output(sky.mk_trigger(which)) end
-      -- else output(event) end
-    end),
-    
-    -- show what is going on
-    sky.Logger{},
-    
-    -- trigger crow shapes
-    shapes,
+    clock2trig,     -- transform clock events to trigger events
+    sky.Logger{},   -- show what is going on
+    shapes,         -- trigger crow shapes
   },
 }
 
 function init()
-  --clk:start()
+  clk:start()
 end
 
 function redraw()

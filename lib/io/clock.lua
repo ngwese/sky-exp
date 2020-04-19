@@ -1,10 +1,17 @@
 
-local _routine = function (this, yield)
-  this:emit(sky.mk_start(this))
+local _regular = function (this, yield)
+  this:emit_start()
   while true do
-    this._tick = this._tick + 1
-    this:emit(sky.mk_clock(this._tick, this))
+    this:emit_tick()
     yield(this.interval)
+  end
+end
+
+local _groove = function(this, groove)
+  this:emit_start()
+  for _, beat in groove:cycle() do
+    this:emit_tick()
+    clock.sync(beat)
   end
 end
 
@@ -17,7 +24,7 @@ Clock.__index = Clock
 
 function Clock.new(o)
   local o = setmetatable(o or {}, Clock)
-  o.interval = o.interval or 1
+  o.interval = o.interval or 0.5
   o._tick = 0
   o._id = nil
   return o
@@ -31,13 +38,12 @@ end
 
 function Clock:start()
   self:_cancel()
-  self._id = clock.run(_routine, self, clock.sleep)
+  self._id = clock.run(_regular, self, clock.sleep)
 end
 
-function Clock:start_sync(source)
+function Clock:start_sync()
   self:_cancel()
-  clock.set_source(source)
-  self._id = clock.run(_routine, self, clock.sync)
+  self._id = clock.run(_regular, self, clock.sync)
 end
 
 function Clock:play_once(groove)
@@ -61,6 +67,11 @@ function Clock:play(groove)
       clock.sleep(v)
     end
   end)
+end
+
+function Clock:play_sync(groove)
+  self:_cancel()
+  self._id = clock.run(_groove, self, groove)
 end
 
 function Clock:stop()
