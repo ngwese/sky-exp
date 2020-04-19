@@ -1,3 +1,13 @@
+
+local _routine = function (this, yield)
+  this:emit(sky.mk_start(this))
+  while true do
+    this._tick = this._tick + 1
+    this:emit(sky.mk_clock(this._tick, this))
+    yield(this.interval)
+  end
+end
+
 --
 -- Clock (independent, free running)
 --
@@ -13,31 +23,42 @@ function Clock.new(o)
   return o
 end
 
-function Clock:start()
+function Clock:_cancel()
   if self._id ~= nil then
     clock.cancel(self._id)
   end
-  self._id = clock.run(function()
-    self:emit(sky.mk_start(self))
-    while true do
-      self._tick = self._tick + 1
-      self:emit(sky.mk_clock(self._tick, self))
-      clock.sleep(self.interval)
-    end
-  end)
+end
+
+function Clock:start()
+  self:_cancel()
+  self._id = clock.run(_routine, self, clock.sleep)
 end
 
 function Clock:start_sync(source)
-  if self._id ~= nil then
-    clock.cancel(self._id)
-  end
+  self:_cancel()
+  clock.set_source(source)
+  self._id = clock.run(_routine, self, clock.sync)
+end
+
+function Clock:play_once(groove)
+  self:_cancel()
   self._id = clock.run(function()
-    clock.set_source(source)
-    self:emit(sky.mk_start(self))
-    while true do
-      self._tick = self._tick + 1
-      self:emit(sky.mk_clock(self._tick, self))
-      clock.sync(self.interval)
+    self:emit_start()
+    for _, v in groove:iter() do
+      self:emit_tick()
+      clock.sleep(v)
+    end
+    self:stop() -- automatically stop
+  end)
+end
+
+function Clock:play(groove)
+  self:_cancel()
+  self._id = clock.run(function()
+    self:emit_start()
+    for _, v in groove:cycle() do
+      self:emit_tick()
+      clock.sleep(v)
     end
   end)
 end
@@ -46,7 +67,7 @@ function Clock:stop()
   if self._id ~= nil then
     clock.cancel(self._id)
     self._id = nil
-    self:emit(sky.mk_stop(self))
+    self:emit_stop()
   end
 end
 
@@ -58,6 +79,19 @@ function Clock:emit(event)
   if self.chain ~= nil then
     self.chain:process(event)
   end
+end
+
+function Clock:emit_start()
+  self:emit(sky.mk_start(self))
+end
+
+function Clock:emit_stop()
+  self:emit(sky.mk_stop(self))
+end
+
+function Clock:emit_tick()
+  self._tick = self._tick + 1
+  self:emit(sky.mk_clock(self._tick, self))
 end
 
 --
