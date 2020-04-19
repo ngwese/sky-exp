@@ -11,6 +11,9 @@ local types = {
   START = 'start',
   STOP = 'stop',
   CONTINUE = 'continue',
+  -- non-midi
+  TRIGGER = 'trigger',
+  GATE = 'gate',
 }
 
 -- extended types
@@ -85,6 +88,14 @@ end
 
 local function mk_script_cleanup()
   return { type = SCRIPT_CLEANUP_EVENT }
+end
+
+local function mk_trigger(which)
+  return { type = types.TRIGGER, which = which or 1 }
+end
+
+local function mk_gate(which, state)
+  return { type = types.GATE, which = which or 1, state = state or 1}
 end
 
 --
@@ -215,6 +226,8 @@ return {
   mk_script_init = mk_script_init,
   mk_script_redraw = mk_script_redraw,
   mk_script_cleanup = mk_script_cleanup,
+  mk_trigger = mk_trigger,
+  mk_gate = mk_gate,
 
   -- helpers
   to_hz = to_hz,
