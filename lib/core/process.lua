@@ -141,7 +141,7 @@ function Chain.new(devices)
   -- generic processor object which supports bypass etc.
   for i, d in ipairs(o.devices) do
     if type(d) == 'function' then
-      o.devices[i] = sky.Func.new(d)
+      o.devices[i] = sky.Func(d)
     end
   end
 
