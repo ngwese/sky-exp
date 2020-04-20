@@ -1,14 +1,14 @@
--- weaktable - a table with weakly held keys and values
+-- weaktable - a table with weakly held keys
 -- @module weaktable
 -- @alias WeakTable
 
 local WeakTable = {}
 WeakTable.__index = WeakTable
-WeakTable.__mode = "kv"  --  invoke dark magic: https://www.lua.org/pil/17.html
+WeakTable.__mode = "k"  --  invoke dark magic: https://www.lua.org/pil/17.html
 
---- Create a table with weak keys and values
+--- Create a table with weakly held keys
 --
--- A table with weakly held keys and values allows objects to be added to a
+-- A table with weakly held keys allows objects to be used as keys within the
 -- table but it won't prevent those objects from being garbage collected
 --
 -- @tparam table initial Initial table contents, optional.
