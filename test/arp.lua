@@ -9,7 +9,7 @@ sky.use('sky/lib/engine/polysub')
 local halfsecond = include('awake/lib/halfsecond')
 
 logger = sky.Logger{
-  bypass = false,
+  bypass = true,
 }
 
 out1 = sky.Switcher{
@@ -18,18 +18,11 @@ out1 = sky.Switcher{
   sky.PolySub{},
 }
 
-local fixed_duration = function(event, output, state)
-  if sky.is_type(event, sky.types.NOTE_OFF) then return end
-  if sky.is_type(event, sky.types.NOTE_ON) then event.duration = 1/16 end
-  output(event)
-end
-
 chain = sky.Chain{
-  sky.Held{ debug = true },      -- track held notes, emit on change
-  sky.Pattern{ debug = true },   -- generate pattern when held notes change
-  sky.Arp{},       -- generate notes from pattern
-  fixed_duration,
-  sky.MakeNote{},
+  sky.Held{ debug = true },        -- track held notes, emit on change
+  sky.Pattern{ debug = true },     -- generate pattern when held notes change
+  sky.Arp{},                       -- generate notes from pattern
+  sky.MakeNote{ duration = 1/16 }, -- make note duration a 16th 
   logger,
   out1,
 }
@@ -45,7 +38,6 @@ in2 = sky.Input{
 }
 
 clk = sky.Clock{
-  interval = sky.bpm_to_sec(100, 4),
   chain = chain,
 }
 
@@ -59,6 +51,7 @@ function init()
   params:set('delay_rate', 0.95)
   params:set('delay_feedback', 0.27)
   -- polysub
+  params:set('ampatk', 0.04)
   params:set('amprel', 0.1)
 
   clk:play_sync(g1)
