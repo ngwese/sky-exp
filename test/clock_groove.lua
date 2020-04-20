@@ -19,8 +19,8 @@ g1 = sky.Groove.new{ 1/4, 1/4, 1/8, 3/8 }
 
 function init()
   -- polysub
-  params:set('ampatk', 0.1)
-  params:set('amprel', 0.1)
+  params:set('ampatk', 0.01)
+  params:set('amprel', 0.05)
 
   clk:play_sync(g1)
 end

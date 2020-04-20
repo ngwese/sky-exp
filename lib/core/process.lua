@@ -127,6 +127,62 @@ function Output:process(event, output)
 end
 
 --
+-- Scheduler (of chain device callback events)
+--
+
+local Scheduler = {}
+Scheduler.__index = Scheduler
+
+function Scheduler.new(chain, device_index)
+  local o = setmetatable({}, Scheduler)
+  o.chain = chain
+  o.device_index = device_index
+  o.clock_pool = Deque.new()
+  return o
+end
+
+function Scheduler:sync_old(when, events)
+  local coro = self.clock_pool:pop()
+
+  if coro == nil then
+    coro = clock.create(function(self, id, when, events)
+      while true do
+        -- print('pre sync', id)
+        clock.sync(when)
+        -- print('post sync', id)
+        -- if type(events) == 'table' then
+        --   for i, e in ipairs(events) do
+        --     -- FIXME: push everything into a source Deque, exponential
+        --     -- complexity in source/sink management if events are done one-by-one
+        --     self.chain:process(e, self.device_index)
+        --   end
+        -- else
+          print('pre process', id, sky.to_string(events), self.device_index)
+          self.chain:process(events, self.device_index)
+          -- print('post process', id)
+        -- end
+        -- print('pushing back in pool', id)
+        self.clock_pool:push_back(id)
+        -- print('suspending', id)
+        clock.suspend()
+      end
+    end)
+    -- print('allocated coro:', coro)
+  end
+  -- print('resuming coro:', self, coro, when, sky.to_string(events))
+
+  clock.resume(coro, self, coro, when, events)
+end
+
+function Scheduler:sync(when, events)
+  clock.run(function()
+    clock.sync(when)
+    --print('pre process', id, sky.to_string(events), self.device_index)
+    self.chain:process(events, self.device_index)
+  end)
+end
+
+--
 -- Chain class
 --
 local Chain = {}
@@ -137,16 +193,23 @@ function Chain.new(devices)
   o.bypass = false
   o.devices = devices or {}
 
+  o._state = { process_count = 0 }
+  o._buffers = { Deque.new(), Deque.new() }
+  o._schedulers = {}
+
   -- rip through devices and if there are functions wrap them in a
   -- generic processor object which supports bypass etc.
   for i, d in ipairs(o.devices) do
     if type(d) == 'function' then
-      o.devices[i] = sky.Func(d)
+      d = sky.Func(d)
+      o.devices[i] = d
+    end
+    -- handle insertion callback
+    if d.device_inserted ~= nil then
+      d:device_inserted(o)
     end
   end
 
-  o._state = { process_count = 0 }
-  o._buffers = { Deque.new(), Deque.new() }
   return o
 end
 
@@ -162,7 +225,8 @@ function Chain:cleanup()
   self:process(sky.mk_script_cleanup())
 end
 
-function Chain:process(event)
+function Chain:process(event, from_device)
+  -- print('chain:process', sky.to_string(event), from_device)
   if self.bypass then
     return
   end
@@ -173,10 +237,21 @@ function Chain:process(event)
   local source = self._buffers[1]
   local sink = self._buffers[2]
 
-  return self._process(event, state, self.devices, source, sink)
+  return self._process(event, state, self.devices, source, sink, from_device)
 end
 
-function Chain._process(event, state, devices, source, sink)
+local function ipairs_from(tbl, start)
+  local iter = function(tbl, i)
+    i = i + 1
+    local v = tbl[i]
+    if v ~= nil then return i, v end
+  end
+  local initial = 0
+  if start then initial = start - 1 end
+  return iter, tbl, initial
+end
+
+function Chain._process(event, state, devices, source, sink, from_device)
   source:clear()
   sink:clear()
 
@@ -187,7 +262,8 @@ function Chain._process(event, state, devices, source, sink)
   -- populate the source event queue with the event to process
   source:push_back(event)
 
-  for i, processor in ipairs(devices) do
+  for i, processor in ipairs_from(devices, from_device) do
+
     event = source:pop()
     while event do
       -- print("\ndevice:", i, "event:", event, "processor:", processor)
@@ -224,6 +300,45 @@ function Chain:run(events)
   end
   return output:to_array()
 end
+
+function Chain:scheduler(device)
+  local s = self._schedulers[device]
+  if s == nil then
+    -- location the position of the device within the chain so processing can
+    -- start there
+    local device_index = 0
+    for i, d in ipairs(self.devices) do
+      if d == device then
+        device_index = i
+        break
+      end
+    end
+    if device_index < 1 then
+      error('device not a member of this chain')
+    end
+    s = Scheduler.new(self, device_index)
+    self._schedulers[device] = s
+  end
+  return s
+end
+
+-- function Chain:schedule_init(who)
+--   self._schedules[who] = {
+--     clock = clock.allocate(function()
+--       self:
+--     end)
+--   }
+
+-- function Chain:schedule_sync(who, when)
+
+--   local outstanding = self._schedules[who]
+--   if outstanding == nil then
+--     -- easy case, no existing
+--     outstanding = { when }
+--     self._schedules[who] = outstanding
+--   end
+
+
 
 --
 -- Group
