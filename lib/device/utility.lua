@@ -53,18 +53,20 @@ Logger.__index = Logger
 function Logger.new(props)
   local o = setmetatable(props, Logger)
   o.bypass = props.bypass or false
+  o.show_beats = props.show_beats or false
+  o.filter = props.filter or function(...) return false end
   return o
 end
 
 function Logger:process(event, output, state)
   if not self.bypass then
     local c = state.process_count
-    if self.filter then
-      if not self.filter(event) then
+    if not self.filter(event) then
+      if self.show_beats then
+        print(c, clock.get_beats(), sky.to_string(event))
+      else
         print(c, sky.to_string(event))
       end
-    else
-      print(c, sky.to_string(event))
     end
   end
   -- always output incoming event
