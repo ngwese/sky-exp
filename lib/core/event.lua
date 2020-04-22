@@ -206,6 +206,27 @@ local function matcher(props)
   end
 end
 
+--- endlessly iterate over list starting from an initial index
+--
+-- iteration steps through the list by index until a nil index is encountered at
+-- which point the index is reset to the initial index and iteration continues.
+--
+-- @tparam table list : list of things
+-- @tparam number initial_index : starting index for iteration, optional
+local cycle = function(list, initial_index)
+  local start = (initial_index or 1)
+  local next = function(a, i)
+    i = i + 1
+    local v = a[i]
+    if v == nil then
+      i = start
+      v = a[i]
+    end
+    return i, v
+  end
+  return next, list, start - 1
+end
+
 --
 -- module
 --
@@ -242,6 +263,7 @@ return {
   is_clock = is_clock,
   is_transport = is_transport,
   matcher = matcher,
+  cycle = cycle,
 
   -- data
   types = types,

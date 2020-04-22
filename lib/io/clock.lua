@@ -1,22 +1,49 @@
+local WeakTable = sky.use('sky/lib/container/weaktable')
 
-local _regular = function (this, yield)
-  this:emit_start()
-  while true do
-    this:emit_tick()
-    yield(this.interval)
+--
+-- Clock global transport callbacks
+--
+local CLOCKS = WeakTable.new()
+
+clock.transport.start = function()
+  for c, _ in pairs(CLOCKS) do
+    -- c:start()
   end
 end
 
-local _groove = function(this, groove)
-  this:emit_start()
-  for _, beat in groove:cycle() do
-    this:emit_tick()
-    clock.sync(beat)
+clock.transport.stop = function()
+  for c, _ in pairs(CLOCKS) do
+    -- c:stop()
   end
 end
 
 --
--- Clock (independent, free running)
+-- Clock coroutines
+--
+
+local _fixed = function (this, yield, interval)
+  this:emit_start()
+  while true do
+    print(this, interval)
+    this:emit_tick()
+    yield(interval)
+  end
+end
+
+local _iterable = function(this, yield, auto_stop, ...)
+  this:emit_start()
+  for i, interval in ... do
+    print(this, i, interval)
+    this:emit_tick()
+    yield(interval)
+  end
+  if auto_stop then
+    this:emit_stop()
+  end
+end
+
+--
+-- Clock
 --
 
 local Clock = {}
@@ -24,6 +51,7 @@ Clock.__index = Clock
 
 function Clock.new(o)
   local o = setmetatable(o or {}, Clock)
+  o.groove = o.groove -- TODO: should interval just be a groove of one element?
   o.interval = o.interval or 0.5
   o._tick = 0
   o._id = nil
@@ -38,40 +66,32 @@ end
 
 function Clock:start()
   self:_cancel()
-  self._id = clock.run(_regular, self, clock.sleep)
+  self._id = clock.run(_fixed, self, clock.sleep, self.interval)
 end
 
 function Clock:start_sync()
   self:_cancel()
-  self._id = clock.run(_regular, self, clock.sync)
+  self._id = clock.run(_fixed, self, clock.sync, self.interval)
 end
 
-function Clock:play_once(groove)
+function Clock:play_once()
   self:_cancel()
-  self._id = clock.run(function()
-    self:emit_start()
-    for _, v in groove:iter() do
-      self:emit_tick()
-      clock.sleep(v)
-    end
-    self:stop() -- automatically stop
-  end)
+  self._id = clock.run(_iterable, self, clock.sleep, true, ipairs(groove))
+end
+
+function Clock:play_once_sync()
+  self:_cancel()
+  self._id = clock.run(_iterable, self, clock.sync, true, ipairs(groove))
 end
 
 function Clock:play(groove)
   self:_cancel()
-  self._id = clock.run(function()
-    self:emit_start()
-    for _, v in groove:cycle() do
-      self:emit_tick()
-      clock.sleep(v)
-    end
-  end)
+  self._id = clock.run(_iterable, self, clock.sleep, false, sky.cycle(groove))
 end
 
 function Clock:play_sync(groove)
   self:_cancel()
-  self._id = clock.run(_groove, self, groove)
+  self._id = clock.run(_iterable, self, clock.sync, false, sky.cycle(groove))
 end
 
 function Clock:stop()
@@ -105,77 +125,9 @@ function Clock:emit_tick()
   self:emit(sky.mk_clock(self._tick, self))
 end
 
---
--- SystemClock
---
-
-local SystemClock = {}
-SystemClock.__index = SystemClock
-
-local singleton_system_clock = nil
-
--- wire up transport callbacks
-clock.transport.start = function()
-  if singleton_system_clock ~= nil then
-    singleton_system_clock:start()
-  end
-end
-
-clock.transport.stop = function()
-  if singleton_system_clock ~= nil then
-    singleton_system_clock:stop()
-  end
-end
-
-function SystemClock.new(o)
-  if singleton_system_clock == nil then
-    local o = setmetatable(o or {}, SystemClock)
-    o.division = o.division or 1
-    o._tick = 0
-    o._id = nil
-    singleton_system_clock = o
-  end
-  return singleton_system_clock
-end
-
-function SystemClock:start()
-  -- FIXME: what should happen if this is called directly?
-  if self._id ~= nil then
-    --print("canceling before re-start", self._id)
-    clock.cancel(self._id)
-  end
-  self._id = clock.run(function()
-    self:emit(sky.mk_start(self))
-    while true do
-      self._tick = self._tick + 1
-      self:emit(sky.mk_clock(self._tick, self))
-      clock.sync(self.division)
-    end
-  end)
-  --print("started", self._id)
-end
-
-function SystemClock:stop()
-  -- FIXME: what should happen if this is called directly?
-  if self._id ~= nil then
-    --print("canceling explict stop", self._id)
-    clock.cancel(self._id)
-    self._id = nil
-    self:emit(sky.mk_stop(self))
-  end
-end
-
-function SystemClock:is_running()
-  return self._id ~= nil
-end
-
-function SystemClock:emit(event)
-  if self.chain ~= nil then
-    self.chain:process(event)
-  end
-end
-
 return {
   Clock = Clock.new,
-  SystemClock = SystemClock.new,
+
+  -- for debugging
+  __CLOCKS = CLOCKS,
 }
