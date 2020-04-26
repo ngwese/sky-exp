@@ -106,7 +106,7 @@ end
 --
 -- Output class (event sink)
 --
-local Output = {}
+local Output = Device.new()
 Output.__index = Output
 
 function Output.new(o)
