@@ -2,7 +2,7 @@
 -- ClockDiv
 --
 
-local ClockDiv = {}
+local ClockDiv = sky.Device()
 ClockDiv.__index = ClockDiv
 
 function ClockDiv.new(o)

@@ -56,7 +56,7 @@ function Note:off(event)
   return self
 end
 
-local Process = {}
+local Process = sky.Device()
 Process.__index = Process
 
 function Process.new(proto)

@@ -42,7 +42,7 @@ end
 --
 -- esNoteGesture
 --
-local esNoteGesture = {}
+local esNoteGesture = sky.Device()
 esNoteGesture.__index = esNoteGesture
 esNoteGesture.EVENT = esNoteGesture
 
@@ -73,7 +73,7 @@ end
 --
 -- esShapeGesture
 --
-local esShapeGesture = {}
+local esShapeGesture = sky.Device()
 esShapeGesture.__index = esShapeGesture
 esShapeGesture.EVENT = 'ES_SHAPE'
 
@@ -155,7 +155,7 @@ end
 --
 -- esNoteRender
 --
-local esNoteRender = {}
+local esNoteRender = sky.Device()
 esNoteRender.__index = esNoteRender
 
 function esNoteRender.new(props)

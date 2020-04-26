@@ -2,7 +2,7 @@
 -- Filter
 --
 
-local Filter = {}
+local Filter = sky.Device()
 Filter.__index = Filter
 
 function Filter.new(o)

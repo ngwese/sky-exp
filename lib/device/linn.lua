@@ -63,7 +63,7 @@ end
 -- linnGesture
 --
 
-local linnGesture = {}
+local linnGesture = sky.Device()
 linnGesture.__index = linnGesture
 
 function linnGesture.new(props)
@@ -92,7 +92,7 @@ end
 -- linnRender
 --
 
-local linnRender = {}
+local linnRender = sky.Device()
 linnRender.__index = linnRender
 
 function linnRender.new(props)

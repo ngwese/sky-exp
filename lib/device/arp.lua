@@ -4,7 +4,7 @@ local Deque = sky.use('sky/lib/container/deque')
 --
 -- Held(note) class
 --
-local Held = {}
+local Held = sky.Device()
 Held.__index = Held
 Held.EVENT = 'HELD'
 
@@ -122,7 +122,7 @@ end
 --
 -- Pattern class
 --
-local Pattern = {}
+local Pattern = sky.Device()
 Pattern.__index = Pattern
 Pattern.EVENT = 'PATTERN'
 Pattern.builder = {}
@@ -202,7 +202,7 @@ end
 --
 -- Arp class
 --
-local Arp = {}
+local Arp = sky.Device()
 Arp.__index = Arp
 Arp.ARP_IMMEDIATE_MODE = 'immediate'
 Arp.ARP_QUEUE_MODE = 'queue'

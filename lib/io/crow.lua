@@ -6,7 +6,7 @@ local WatchTable = include('sky/lib/container/watchtable')
 --
 -- CrowVoice
 --
-local CrowVoice = {}
+local CrowVoice = sky.Device()
 CrowVoice.__index = CrowVoice
 
 function CrowVoice.new(props)
@@ -53,7 +53,7 @@ local Watch
 -- CrowShape
 --
 
-local CrowShape = {}
+local CrowShape = sky.Device()
 CrowShape.__index = CrowShape
 
 function CrowShape.new(shapes)

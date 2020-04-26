@@ -30,7 +30,7 @@ end
 --
 -- ArcDialGesture
 --
-local ArcDialGesture = {}
+local ArcDialGesture = sky.Device()
 ArcDialGesture.__index = ArcDialGesture
 ArcDialGesture.ARC_DIAL_EVENT = 'ARC_DIAL'
 

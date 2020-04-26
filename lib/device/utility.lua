@@ -3,7 +3,7 @@
 -- Func class
 --
 
-local Func = {}
+local Func = sky.Device()
 Func.__index = Func
 
 function Func.new(f)
@@ -26,19 +26,11 @@ end
 -- Thru class
 --
 
-local Thru = {}
+local Thru = sky.Device()
 Thru.__index = Thru
 
 function Thru.new()
-  local o = setmetatable({}, Thru)
-  o.bypass = false
-  return o
-end
-
-function Thru:process(event, output)
-  if not self.bypass then
-    output(event)
-  end
+  return setmetatable({}, Thru)
 end
 
 --
@@ -47,7 +39,7 @@ end
 
 local tu = require('tabutil')
 
-local Logger = {}
+local Logger = sky.Device()
 Logger.__index = Logger
 
 function Logger.new(props)
@@ -77,7 +69,7 @@ end
 -- Map
 --
 
-local Map = {}
+local Map = sky.Device()
 Map.__index = Map
 
 function Map.new(props)

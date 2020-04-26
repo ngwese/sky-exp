@@ -1,4 +1,4 @@
-local MakeNote = {}
+local MakeNote = sky.Device()
 MakeNote.__index = MakeNote
 
 function MakeNote.new(o)

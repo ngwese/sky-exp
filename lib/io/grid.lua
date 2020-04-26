@@ -32,7 +32,7 @@ end
 --
 -- GridDisplay
 --
-local GridDisplay = {}
+local GridDisplay = sky.Device()
 GridDisplay.__index = GridDisplay
 
 function GridDisplay.new(props)

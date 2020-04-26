@@ -2,7 +2,7 @@
 -- Transpose (midi semitones)
 --
 
-local Transpose = {}
+local Transpose = sky.Device()
 Transpose.__index = Transpose
 
 function Transpose.new(o)

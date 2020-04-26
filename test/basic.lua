@@ -2,16 +2,26 @@ include('sky/lib/prelude')
 sky.use('sky/lib/device/transpose')
 sky.use('sky/lib/engine/polysub')
 
-t = sky.Transpose{ semitones = 12 }
-
 source = sky.Input{
-  name = "AXIS-64 USB Keyboard",
+  --name = "AXIS-64 USB Keyboard",
+  name = "UM-ONE",
   chain = sky.Chain{ sky.Send("keys") },
 }
 
-c1 = sky.Receive("keys", sky.Chain{ sky.Send("out") })
-c2 = sky.Receive("keys", sky.Chain{ t, sky.Send("out") })
-sink = sky.Receive("out", sky.Chain{ sky.Logger{}, sky.PolySub{} })
+double = sky.Chain{
+  sky.Receive("keys"),
+  -- NOTE: this is a wart. since transpose mutates the event, the single
+  --       source event must be cloned so that transpose doesn't affect
+  --       the source event being injected a second time
+  function(event, output)
+    output(sky.clone(event))
+  end,
+  sky.Transpose{ semitones = 12 },
+  sky.Receive("keys"),
+  sky.Send("out"),
+}
+
+sink = sky.Chain{ sky.Receive("out"), sky.Logger{}, sky.PolySub{} }
 
 function init()
 end

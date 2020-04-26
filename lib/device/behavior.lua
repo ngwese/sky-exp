@@ -4,7 +4,7 @@
 
 local types = sky.types
 
-local Behavior = {}
+local Behavior = sky.Device()
 Behavior.__index = Behavior
 
 function Behavior.new(o)

@@ -1,7 +1,7 @@
 --
 -- Switcher class
 --
-local Switcher = {}
+local Switcher = sky.Device()
 Switcher.__index = Switcher
 
 function Switcher.new(o)

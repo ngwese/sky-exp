@@ -1,7 +1,7 @@
 --
 -- Toggle
 --
-local Toggle = {}
+local Toggle = sky.Device()
 Toggle.__index = Toggle
 
 function Toggle.new(props)

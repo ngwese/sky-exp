@@ -5,6 +5,31 @@
 local Deque = sky.use('sky/lib/container/deque')
 
 --
+-- Device class
+--
+local Device = {}
+Device.__index = Device
+
+function Device.new(props)
+  local o = setmetatable(props or {}, Device)
+  o.bypass = o.bypass or false
+  return o
+end
+
+function Device:device_inserted(chain)
+  -- nothing to do
+end
+
+function Device:device_removed(chain)
+  -- nothing to do
+end
+
+function Device:process(event, output, state)
+  if self.bypass then return end
+  output(event)
+end
+
+--
 -- Input class (event source)
 --
 local Input = {}
@@ -141,39 +166,6 @@ function Scheduler.new(chain, device_index)
   return o
 end
 
-function Scheduler:sync_old(when, events)
-  local coro = self.clock_pool:pop()
-
-  if coro == nil then
-    coro = clock.create(function(self, id, when, events)
-      while true do
-        -- print('pre sync', id)
-        clock.sync(when)
-        -- print('post sync', id)
-        -- if type(events) == 'table' then
-        --   for i, e in ipairs(events) do
-        --     -- FIXME: push everything into a source Deque, exponential
-        --     -- complexity in source/sink management if events are done one-by-one
-        --     self.chain:process(e, self.device_index)
-        --   end
-        -- else
-          print('pre process', id, sky.to_string(events), self.device_index)
-          self.chain:process(events, self.device_index)
-          -- print('post process', id)
-        -- end
-        -- print('pushing back in pool', id)
-        self.clock_pool:push_back(id)
-        -- print('suspending', id)
-        clock.suspend()
-      end
-    end)
-    -- print('allocated coro:', coro)
-  end
-  -- print('resuming coro:', self, coro, when, sky.to_string(events))
-
-  clock.resume(coro, self, coro, when, events)
-end
-
 local _scheduler_coro = function(self, when, events, method)
   method(when)
   self.chain:process(events, self.device_index)
@@ -185,6 +177,10 @@ end
 
 function Scheduler:sleep(when, events)
   clock.run(_scheduler_coro, self, when, events, clock.sleep)
+end
+
+function Scheduler:now(events)
+  self.chain:process(events, self.device_index)
 end
 
 --
@@ -210,9 +206,7 @@ function Chain.new(devices)
       o.devices[i] = d
     end
     -- handle insertion callback
-    if d.device_inserted ~= nil then
-      d:device_inserted(o)
-    end
+    d:device_inserted(o)
   end
 
   return o
@@ -327,24 +321,6 @@ function Chain:scheduler(device)
   return s
 end
 
--- function Chain:schedule_init(who)
---   self._schedules[who] = {
---     clock = clock.allocate(function()
---       self:
---     end)
---   }
-
--- function Chain:schedule_sync(who, when)
-
---   local outstanding = self._schedules[who]
---   if outstanding == nil then
---     -- easy case, no existing
---     outstanding = { when }
---     self._schedules[who] = outstanding
---   end
-
-
-
 --
 -- Group
 --
@@ -381,6 +357,7 @@ end
 
 return {
   -- objects
+  Device = Device.new,
   Input = Input.new,
   Output = Output.new,
   Chain = Chain.new,

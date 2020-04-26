@@ -30,26 +30,44 @@ end
 -- Receive
 --
 
-local Receive = {}
+local Receive = sky.Device()
 Receive.__index = Receive
 
-function Receive.new(sender_name, chain)
+function Receive.new(sender_name)
   local o = setmetatable({}, Receive)
   o.from = sender_name
-  o.chain = chain
   _add(o.from, o)
+  o._scheduler = nil
   return o
 end
 
-function Receive:process(event)
-  self.chain:process(event)
+function Receive:device_inserted(chain)
+  if self._scheduler ~= nil then
+    error('Receive: one instance cannot be used in multiple chians at the same time')
+  end
+  self._scheduler = chain:scheduler(self)
+end
+
+function Receive:device_removed(chain)
+  self._scheduler = nil
+end
+
+function Receive:inject(event)
+  if not self.bypass and self._scheduler then
+    --print('injecting;', self.from, self, sky.to_string(event), self._scheduler.device_index )
+    self._scheduler:now(event)
+  end
+end
+
+function Receive:process(event, output, state)
+  output(event)
 end
 
 --
 -- Send
 --
 
-local Send = {}
+local Send = sky.Device()
 Send.__index = Send
 
 function Send.new(name)
@@ -63,7 +81,7 @@ function Send:process(event, output, state)
   local listeners = Observers[self.to]
   if listeners then
     for _, r in ipairs(listeners) do
-      r:process(event)
+      r:inject(event)
     end
   end
 end
@@ -72,7 +90,7 @@ end
 -- Forward
 --
 
-local Forward = {}
+local Forward = sky.Device()
 Forward.__index = Forward
 
 function Forward.new(chain)

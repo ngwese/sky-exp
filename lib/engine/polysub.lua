@@ -9,7 +9,7 @@ local glue = include('we/lib/polysub')
 
 local Singleton = nil
 
-local PolySub = {}
+local PolySub = sky.Device()
 PolySub.__index = PolySub
 
 function PolySub.new(props)
