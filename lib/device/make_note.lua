@@ -3,6 +3,7 @@ MakeNote.__index = MakeNote
 
 function MakeNote.new(o)
   local o = setmetatable(o or {}, MakeNote)
+  o.duration = o.duration or 1/16
   o._scheduler = nil
   return o
 end
@@ -34,7 +35,7 @@ function MakeNote:process(event, output, state)
   if sky.is_type(event, sky.types.NOTE_ON) then
     -- stamp duration if there isn't one
     if event.duration == nil then
-      event.duration = self.duration
+      event.duration = clock.get_beat_sec(self.duration)
     end
 
     output(event)
@@ -42,7 +43,7 @@ function MakeNote:process(event, output, state)
     if event.duration ~= nil then
       local note_off = sky.mk_note_off(event.note, 0, event.ch)
       note_off.from = self
-      self._scheduler:sync(event.duration, note_off)
+      self._scheduler:sleep(event.duration, note_off)
     end
     return
   end

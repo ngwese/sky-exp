@@ -174,12 +174,17 @@ function Scheduler:sync_old(when, events)
   clock.resume(coro, self, coro, when, events)
 end
 
+local _scheduler_coro = function(self, when, events, method)
+  method(when)
+  self.chain:process(events, self.device_index)
+end
+
 function Scheduler:sync(when, events)
-  clock.run(function()
-    clock.sync(when)
-    --print('pre process', id, sky.to_string(events), self.device_index)
-    self.chain:process(events, self.device_index)
-  end)
+  clock.run(_scheduler_coro, self, when, events, clock.sync)
+end
+
+function Scheduler:sleep(when, events)
+  clock.run(_scheduler_coro, self, when, events, clock.sleep)
 end
 
 --

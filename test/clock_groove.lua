@@ -19,7 +19,7 @@ local build_clock = function(note_num, to_chain, ch)
           output(sky.mk_note_on(note_num, 100, ch))
         end
       end,
-      sky.MakeNote{ duration = 1/16 }, -- FIXME: this ends on next 16ths inverval boundry not 1/16th in length
+      sky.MakeNote{ duration = 1/16 },
       sky.Forward(to_chain),
     }
   }
