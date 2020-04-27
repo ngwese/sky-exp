@@ -20,6 +20,12 @@ function Step:is_active()
   return self.chance > 0
 end
 
+function Step:clear()
+  self.chance = 0
+  self.velocity = 1
+  self.duration = 1
+end
+
 --
 -- Row
 --
@@ -30,13 +36,14 @@ Row.__index = Row
 local MAX_STEPS = 16
 
 function Row.new(props)
-  local o = setmetatable({} or props, Row)
+  local o = setmetatable(props or {}, Row)
   o:set_n(o.n or 8)
   o:set_res(o.res or 4)
   o:set_bend(o.bend or 1.0)
   o:set_offset(o.offset or 0)
   o.steps = {}
   o:steps_clear()
+  o._scaler = sky.build_scalex(0, 1, 0, 1)
   return o
 end
 
@@ -69,15 +76,22 @@ end
 function Row:randomize()
   for i, s in ipairs(self.steps) do
     local chance = math.random()
-    print(self, i, s, chance)
-    if chance > 0.3 then chance = math.random() else chance = 0 end -- random chance for ~20% of steps (but not really)
+    --print(self, i, s, chance)
+    if chance > 0.5 then chance = math.random() else chance = 0 end -- random chance for ~20% of steps (but not really)
     if chance > 0 then
       s.chance = chance
-      s.velocity = math.random()
-      s.duration = math.random()
-      tab.print(s)
+      s.velocity = util.linlin(0, 1, 0.2, 1, math.random())
+      s.duration = util.linlin(0, 1, 0.25, 1, math.random())
+      --tab.print(s)
+    else
+      s:clear()
     end
   end
+end
+
+function Row:head_position(beats)
+  local _, f = math.modf(beats / self.res)
+  return self._scaler(f, self.bend)
 end
 
 --
@@ -97,25 +111,42 @@ function RowRender.new(x, y)
   return o
 end
 
-function RowRender:draw(row)
+function RowRender:width(row)
+  return self.STEP_WIDTH * row.n
+end
+
+function RowRender:draw(row, beats)
   -- precaution, close any path which may have been left open
   --screen.close()
   -- draw from bottom, left
   local x = self.topleft[1]
   local y = self.topleft[2] + self.BAR_HEIGHT
   for i, step in ipairs(row.steps) do
+    if i > row.n then break end -- FIXME: move this iteration detail to Row
     --screen.move(x, y)
     if step:is_active() then
       local width = math.floor(util.linlin(0, 1, 1, self.BAR_WIDTH, step.duration)) -- FIXME: 0 duration really?
       local height = math.floor(util.linlin(0, 1, 1, self.BAR_HEIGHT, step.velocity))
-      print("drawing", x, y, width, height)
-      screen.rect(x, y, width, height)
-      screen.level(10)
+      --print("drawing", x, y, width, height)
+      screen.rect(x, y - height, width, height)
+      local level = math.floor(util.linlin(0, 1, 2, 12, step.chance))
+      screen.level(level)
       screen.fill()
     end
     x = x + self.STEP_WIDTH
   end
+
+  -- playhead
+  x = self.topleft[1]
+  y = self.topleft[2] + self.BAR_HEIGHT + 4
+  screen.move(x, y)
+  screen.line_rel(self:width(row) * row:head_position(beats), 0)
+  screen.level(1)
+  screen.close()
+  screen.stroke()
 end
+
+
 
 local function layout_vertical(x, y, widgets)
   -- adjust the widget top/left origin such that they are arranged in a stack
@@ -131,31 +162,54 @@ end
 -- script logic
 --
 
-rows = { Row.new(), Row.new(), Row.new(), Row.new() }
-renderers = { RowRender.new(), RowRender.new(), RowRender.new() }
+rows = {
+  Row.new{ n = 14 },
+  Row.new{ n = 8  },
+  Row.new{ n = 8  },
+  Row.new{ n = 16 },
+}
+
+renderers = { RowRender.new(), RowRender.new(), RowRender.new(), RowRender.new() }
+
+dirty = true
 
 function redraw()
+  --if not dirty then return end
+  local beats = clock.get_beats()
   screen.clear()
   for i, r in ipairs(renderers) do
     --print("drawing", i, r)
-    r:draw(rows[i])
+    r:draw(rows[i], beats)
   end
   screen.update()
+  dirty = false
 end
 
-function init()
-  -- testing
+function randomize()
   for i, r in ipairs(rows) do
     r:randomize()
   end
-  layout_vertical(8, 4, renderers)
+  dirty = true
+  redraw()
+end
+
+function key(n, z)
+  if n == 3 and z == 1 then
+    randomize()
+  end
+end
+
+
+function init()
+  randomize()
+  layout_vertical(0, 2, renderers)
 
   -- screen
-  -- clock.run(function()
-  --   while true do
-  --     clock.sleep(1/2)
-  --     redraw()
-  --   end
-  -- end)
+  clock.run(function()
+    while true do
+      clock.sleep(1/32)
+      redraw()
+    end
+  end)
 end
 
