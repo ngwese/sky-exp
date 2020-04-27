@@ -227,6 +227,38 @@ local cycle = function(list, initial_index)
   return next, list, start - 1
 end
 
+local scalex = function(x, in_low, in_high, out_low, out_high, exp)
+  local in_range = in_high - in_low
+  local w = (x - in_low) / in_range
+
+  if w == 0 then
+    return out_low
+  end
+
+  local out_range = out_high - out_low
+
+  if w > 0 then
+    return out_low + out_range * ((x - in_low) / in_range) ^ exp
+  end
+
+  return out_low + out_range * -((((-x + in_low) / in_range)) ^ exp)
+end
+
+local build_scalex = function(in_low, in_high, out_low, out_high)
+  local in_range = in_high - in_low
+  local out_range = out_high - out_low
+  return function(x, exp)
+    local w = (x - in_low) / in_range
+    if w == 0 then
+      return out_low
+    end
+    if w > 0 then
+      return out_low + out_range * ((x - in_low) / in_range) ^ exp
+    end
+    return out_low + out_range * -((((-x + in_low) / in_range)) ^ exp)
+  end
+end
+
 --
 -- module
 --
@@ -264,6 +296,8 @@ return {
   is_transport = is_transport,
   matcher = matcher,
   cycle = cycle,
+  scalex = scalex,
+  build_scalex = build_scalex,
 
   -- data
   types = types,
