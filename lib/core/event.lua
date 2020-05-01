@@ -213,7 +213,7 @@ end
 --
 -- @tparam table list : list of things
 -- @tparam number initial_index : starting index for iteration, optional
-local cycle = function(list, initial_index)
+local function cycle(list, initial_index)
   local start = (initial_index or 1)
   local next = function(a, i)
     i = i + 1
@@ -227,7 +227,7 @@ local cycle = function(list, initial_index)
   return next, list, start - 1
 end
 
-local scalex = function(x, in_low, in_high, out_low, out_high, exp)
+local function scalex(x, in_low, in_high, out_low, out_high, exp)
   local in_range = in_high - in_low
   local w = (x - in_low) / in_range
 
@@ -244,7 +244,7 @@ local scalex = function(x, in_low, in_high, out_low, out_high, exp)
   return out_low + out_range * -((((-x + in_low) / in_range)) ^ exp)
 end
 
-local build_scalex = function(in_low, in_high, out_low, out_high)
+local function build_scalex(in_low, in_high, out_low, out_high)
   local in_range = in_high - in_low
   local out_range = out_high - out_low
   return function(x, exp)
