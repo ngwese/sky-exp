@@ -163,24 +163,40 @@ function Scheduler.new(chain, device_index)
   o.chain = chain
   o.device_index = device_index
   o.clock_pool = Deque.new()
+  o.clock_id = nil
   return o
 end
 
-local _scheduler_coro = function(self, when, events, method)
+local _scheduler_coro = function(self, when, event, method)
   method(when)
-  self.chain:process(events, self.device_index)
+  self.chain:process(event, self.device_index)
 end
 
-function Scheduler:sync(when, events)
-  clock.run(_scheduler_coro, self, when, events, clock.sync)
+function Scheduler:sync(when, event)
+  clock.run(_scheduler_coro, self, when, event, clock.sync)
 end
 
-function Scheduler:sleep(when, events)
-  clock.run(_scheduler_coro, self, when, events, clock.sleep)
+function Scheduler:sleep(when, event)
+  clock.run(_scheduler_coro, self, when, event, clock.sleep)
 end
 
-function Scheduler:now(events)
-  self.chain:process(events, self.device_index)
+function Scheduler:now(event)
+  self.chain:process(event, self.device_index)
+end
+
+function Scheduler:run(coro, ...)
+  self:cancel()
+  local output = function(event)
+    self.chain:process(event, self.device_index)
+  end
+  self.clock_id = clock.run(coro, output)
+end
+
+function Scheduler:cancel()
+  if self.clock_id ~= nil then
+    clock.cancel(self.clock_id)
+    self.clock_id = nil
+  end
 end
 
 --
