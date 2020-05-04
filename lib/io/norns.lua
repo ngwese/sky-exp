@@ -7,14 +7,32 @@ NornsInput.KEY_EVENT = 'KEY'
 NornsInput.ENC_EVENT = 'ENC'
 NornsInput.REDRAW_EVENT = 'REDRAW'
 
-local Singleton = nil
+local SingletonInput = nil
+
+local function do_key(...)
+  if SingletonInput then SingletonInput:on_key_event(...) end
+end
+
+local function do_enc(...)
+  if SingletonInput then SingletonInput:on_enc_event(...) end
+end
+
+local function do_redraw()
+  if SingletonInput then SingletonInput:on_redraw() end
+end
+
+local function has_focus()
+  -- test to see if our redraw method has been replaced, if so we've lost focus
+  -- and the menu taken over redraw
+  return redraw == do_redraw
+end
 
 function NornsInput.new(props)
   local o = setmetatable(props or {}, NornsInput)
   -- note this (re)defined script global handlers
-  function key(...) o:on_key_event(...) end
-  function enc(...) o:on_enc_event(...) end
-  function redraw() o:on_redraw() end
+  key = do_key
+  enc = do_enc
+  redraw = do_redraw
 
   o._redraw_event = o.mk_redraw()
   return o
@@ -56,11 +74,11 @@ function NornsInput:on_redraw()
   if self.chain then self.chain:process(self.mk_redraw()) end
 end
 
-local function shared_instance(props)
-  if Singleton == nil then
-    Singleton = NornsInput.new(props)
+local function shared_input(props)
+  if SingletonInput == nil then
+    SingletonInput = NornsInput.new(props)
   end
-  return Singleton
+  return SingletonInput
 end
 
 --
@@ -68,6 +86,8 @@ end
 --
 local NornsDisplay = sky.Device()
 NornsDisplay.__index = NornsDisplay
+
+local SingletonDisplay = nil
 
 function NornsDisplay.new(props)
   return setmetatable(props or {}, NornsDisplay)
@@ -79,7 +99,7 @@ function NornsDisplay:process(event, output, state)
   -- before we know if any of the children will render into it. Ideally we'd
   -- allow children to render into an offscreen buffer then swap it at the end
   -- if it was dirtied.
-  if sky.is_type(event, NornsInput.REDRAW_EVENT) then
+  if has_focus() and sky.is_type(event, NornsInput.REDRAW_EVENT) then
     local props = {}
     for i, child in ipairs(self) do
       if type(child) == 'function' then
@@ -94,11 +114,17 @@ function NornsDisplay:process(event, output, state)
   end
 end
 
+local function shared_display(props)
+  if SingletonDisplay == nil then
+    SingletonDisplay = NornsDisplay.new(props)
+  end
+  return SingletonDisplay
+end
+
 
 return {
-  --NornsInput = shared_instance,
-  NornsInput = NornsInput.new,
-  NornsDisplay = NornsDisplay.new, -- FIXME: should be a singleton
+  NornsInput = shared_input,
+  NornsDisplay = shared_display,
 
   -- events
   mk_key = NornsInput.mk_key,
