@@ -88,6 +88,9 @@ local SingletonDisplay = nil
 
 function NornsDisplay:new(props)
   NornsDisplay.super.new(self, props)
+  for i, child in ipairs(props) do
+    self[i] = child
+  end
 end
 
 function NornsDisplay:process(event, output, state)
