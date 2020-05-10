@@ -3,8 +3,8 @@ sky.use('sky/lib/device/transpose')
 sky.use('sky/lib/engine/polysub')
 
 source = sky.Input{
-  --name = "AXIS-64 USB Keyboard",
-  name = "UM-ONE",
+  name = "AXIS-64 USB Keyboard",
+  -- name = "UM-ONE",
   chain = sky.Chain{ sky.Send("keys") },
 }
 

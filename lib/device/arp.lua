@@ -4,19 +4,17 @@ local Deque = sky.use('sky/lib/container/deque')
 --
 -- Held(note) class
 --
-local Held = sky.Device()
-Held.__index = Held
+local Held = sky.Device:extend()
 Held.EVENT = 'HELD'
 
-function Held.new(props)
-  local o = setmetatable({}, Held)
-  o.debug = props.debug or false
-  o._hold = props.hold or false
-  o._hold_count = 0
-  o._hold_should_reset = false
-  o._hold_has_changed = false
-  o._ordering = Deque.new()
-  return o
+function Held:new(props)
+  Held.super.new(self, props)
+  self.debug = props.debug or false
+  self._hold = props.hold or false
+  self._hold_count = 0
+  self._hold_should_reset = false
+  self._hold_has_changed = false
+  self._ordering = Deque.new()
 end
 
 function Held.__newindex(o, k, v)
@@ -122,17 +120,14 @@ end
 --
 -- Pattern class
 --
-local Pattern = sky.Device()
-Pattern.__index = Pattern
+local Pattern = sky.Device:extend()
 Pattern.EVENT = 'PATTERN'
 Pattern.builder = {}
 
-function Pattern.new(o)
-  local o = setmetatable(o or {}, Pattern)
-  o.style = o.syle or 'as_played'
-  o.debug = o.debug or false
-
-  return o
+function Pattern:new(props)
+  Pattern.super.new(self, props)
+  self.style = props.syle or 'as_played'
+  self.debug = props.debug or false
 end
 
 function Pattern:mk_event(value)
@@ -202,20 +197,18 @@ end
 --
 -- Arp class
 --
-local Arp = sky.Device()
-Arp.__index = Arp
+local Arp = sky.Device:extend()
 Arp.ARP_IMMEDIATE_MODE = 'immediate'
 Arp.ARP_QUEUE_MODE = 'queue'
 
-function Arp.new(props)
-  local o = setmetatable(props or {}, Arp)
-  o.mode = props.mode or Arp.ARP_IMMEDIATE_MODE
-  o._pattern = nil
-  o._next_pattern = nil
-  o._step = 1
-  o._length = 0
-  o._last = nil
-  return o
+function Arp:new(props)
+  Arp.super.new(self, props)
+  self.mode = props.mode or Arp.ARP_IMMEDIATE_MODE
+  self._pattern = nil
+  self._next_pattern = nil
+  self._step = 1
+  self._length = 0
+  self._last = nil
 end
 
 function Arp:set_pattern(notes)
@@ -293,9 +286,9 @@ end
 --
 
 return {
-  Held = Held.new,
-  Pattern = Pattern.new,
-  Arp = Arp.new,
+  Held = Held,
+  Pattern = Pattern,
+  Arp = Arp,
   -- constants
   ARP_IMMEDIATE_MODE = Arp.ARP_IMMEDIATE_MODE,
   ARP_QUEUE_MODE = Arp.ARP_QUEUE_MODE,

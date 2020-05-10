@@ -1,14 +1,12 @@
 --
 -- Toggle
 --
-local Toggle = sky.Device()
-Toggle.__index = Toggle
+local Toggle = sky.Device:extend()
 
-function Toggle.new(props)
-  local o = setmetatable(props, Toggle)
-  o.state = props.state or false
-  o.match = props.match or function(e) return false end
-  return o
+function Toggle:new(props)
+  Toggle.super.new(self, props)
+  self.state = props.state or false
+  self.match = props.match or function(e) return false end
 end
 
 function Toggle:process(event, output, state)
@@ -31,5 +29,5 @@ end
 --
 
 return {
-  Toggle = Toggle.new,
+  Toggle = Toggle,
 }

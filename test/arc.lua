@@ -1,11 +1,11 @@
 include('sky/lib/prelude')
 sky.use('sky/lib/io/arc')
 
-local a = arc.connect()
+a = arc.connect()
 
-local chain = sky.Chain{
+chain = sky.Chain{
   sky.ArcDialGesture{},
-  --sky.Logger{},
+  sky.Logger{},
   sky.ArcDisplay{
     arc = a,
     sky.ArcDialRender{ mode = 'pointer' },
@@ -14,7 +14,7 @@ local chain = sky.Chain{
   }
 }
 
-local in1 = sky.ArcInput{
+in1 = sky.ArcInput{
   arc = a,
   chain = chain,
 }

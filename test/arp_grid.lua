@@ -3,6 +3,7 @@ sky.use('sky/lib/device/arp')
 sky.use('sky/lib/device/switcher')
 sky.use('sky/lib/engine/polysub')
 sky.use('sky/lib/io/grid')
+sky.use('sky/lib/io/clock')
 sky.use('sky/lib/device/es')
 
 local halfsecond = include('awake/lib/halfsecond')
@@ -15,7 +16,7 @@ logger = sky.Logger{
 }
 
 out1 = sky.Switcher{
-  which = 1,
+  which = 2,
   sky.Output{ name = "UM-ONE" },
   sky.PolySub{},
 }

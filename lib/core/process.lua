@@ -3,17 +3,23 @@
 -- @alias process
 
 local Deque = sky.use('sky/lib/container/deque')
+sky.use('sky/lib/core/object')
 
 --
 -- Device class
 --
-local Device = {}
-Device.__index = Device
+local Device = sky.Object:extend()
 
-function Device.new(props)
-  local o = setmetatable(props or {}, Device)
-  o.bypass = o.bypass or false
-  return o
+function Device:new(props)
+  Device.super.new(self)
+  -- for k,v in pairs(props) do
+  --   self[k] = v
+  -- end
+  if props ~= nil then
+    self.bypass = props.bypass or false
+  else
+    self.bypass = false
+  end
 end
 
 function Device:device_inserted(chain)
@@ -30,46 +36,50 @@ function Device:process(event, output, state)
 end
 
 --
--- Input class (event source)
+-- InputBase class (event source)
 --
-local Input = {}
-Input.__index = Input
+local InputBase = sky.Object:extend()
 
-function Input.new(o)
-  local o = setmetatable(o or {}, Input)
+function InputBase:new(props)
+  InputBase.super.new(self, props)
+  self.chain = props.chain
+  self.enabled = props.enabled or true
+end
+
+--
+-- [midi] Input class (event source)
+--
+local Input = InputBase:extend()
+
+function Input:new(props)
+  Input.super.new(self, props)
 
   -- determine which device to use
-  if not o.device then
-    if o.name then
+  self.device = props.device
+  if self.device == nil then
+    if props.name then
       -- attempt to find the midi device by name
       for i,v in ipairs(midi.vports) do
-        if sky.starts_with(v.name, o.name) then
-          o.device = midi.connect(i)
+        if sky.starts_with(v.name, props.name) then
+          self.device = midi.connect(i)
+          self.name = props.name
         end
       end
     else
-      o.device = midi.connect(1)
+      self.device = midi.connect(1)
     end
   end
 
-  -- set defaults
-  --o.device = o.device or midi.connect(1)
-  if type(o.enabled) ~= "boolean" then
-    o.enabled = true
-  end
-
-  if o.device == nil then
-    local n = o.name or "<none>"
+  if self.device == nil then
+    local n = self.name or "<none>"
     print("warning: input not connected to device " .. n)
-    return o
+    return
   end
 
   -- install device event handler
-  o.device.event = function(data)
-    o:on_midi_event(data)
+  self.device.event = function(data)
+    self:on_midi_event(data)
   end
-
-  return o
 end
 
 function Input:on_midi_event(data)
@@ -106,36 +116,34 @@ end
 --
 -- Output class (event sink)
 --
-local Output = Device.new()
-Output.__index = Output
+local Output = Device:extend()
 
-function Output.new(o)
-  local o = setmetatable(o or {}, Output)
+function Output:new(props)
+  Output.super.new(self, props)
 
   -- determine which device to use
-  if not o.device then
-    if o.name then
+  if not props.device then
+    if props.name then
       -- attempt to find the midi device by name
       for i,v in ipairs(midi.vports) do
-        if sky.starts_with(v.name, o.name) then
-          o.device = midi.connect(i)
+        if sky.starts_with(v.name, props.name) then
+          self.device = midi.connect(i)
+          self.name = props.name
         end
       end
     else
-      o.device = midi.connect(2)
+      self.device = midi.connect(2)
     end
   end
 
-  if o.device == nil then
-    local n = o.name or "<none>"
+  if self.device == nil then
+    local n = self.name or "<none>"
     print("warning: output not connected to device " .. n)
   end
 
-  if type(o.enabled) ~= "boolean" then
-    o.enabled = true
+  if type(props.enabled) ~= "boolean" then
+    self.enabled = true
   end
-
-  return o
 end
 
 function Output:process(event, output)
@@ -340,19 +348,16 @@ end
 --
 -- Group
 --
-local Group = {}
-Group.__index = Group
+local Group = Device:extend()
 
-function Group.new(props)
-  local o = setmetatable({}, Group)
-  o.bypass = props.bypass or false
-  o.source = Deque.new()
-  o.sink = Deque.new()
-  o.devices = {}
+function Group:new(props)
+  Group.super.new(self, props)
+  self.source = Deque.new()
+  self.sink = Deque.new()
+  self.devices = {}
   for _, v in ipairs(props) do
-    table.insert(o.devices, v)
+    table.insert(self.devices, v)
   end
-  return o
 end
 
 function Group:process(event, output, state)
@@ -373,11 +378,12 @@ end
 
 return {
   -- objects
-  Device = Device.new,
-  Input = Input.new,
-  Output = Output.new,
+  Device = Device,
+  InputBase = InputBase,
+  Input = Input,
+  Output = Output,
   Chain = Chain.new,
-  Group = Group.new,
+  Group = Group,
 
   -- debug
   __input_count = input_count,

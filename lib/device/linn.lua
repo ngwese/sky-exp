@@ -63,15 +63,13 @@ end
 -- linnGesture
 --
 
-local linnGesture = sky.Device()
-linnGesture.__index = linnGesture
+local linnGesture = sky.Device:extend()
 
-function linnGesture.new(props)
-  local o = setmetatable(props, linnGesture)
-  o.ch = props.ch or 1
-  o.vel = props.vel or 127
-  o.focus = { x = 0, y = 0 }
-  return o
+function linnGesture:new(props)
+  linnGesture.super.new(self, props)
+  self.ch = props.ch or 1
+  self.vel = props.vel or 127
+  self.focus = { x = 0, y = 0 }
 end
 
 function linnGesture:process(event, output, props)
@@ -92,13 +90,11 @@ end
 -- linnRender
 --
 
-local linnRender = sky.Device()
-linnRender.__index = linnRender
+local linnRender = sky.Object:extend()
 
-function linnRender.new(props)
-  local o = setmetatable(props, linnRender)
-  o.key_level = props.key_level or 15
-  return o
+function linnRender:new(props)
+  linnRender.super.new(self, props)
+  self.key_level = props.key_level or 15
 end
 
 function linnRender:render(event, props)
@@ -123,6 +119,6 @@ end
 --
 
 return {
-  linnGesture = linnGesture.new,
-  linnRender = linnRender.new,
+  linnGesture = linnGesture,
+  linnRender = linnRender,
 }

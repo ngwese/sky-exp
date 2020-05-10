@@ -3,14 +3,11 @@
 -- Func class
 --
 
-local Func = sky.Device()
-Func.__index = Func
+local Func = sky.Device:extend()
 
-function Func.new(f)
-  local o = setmetatable({}, Func)
-  o.f = f
-  o.bypass = false
-  return o
+function Func:new(f)
+  Func.super.new(self)
+  self.f = f
 end
 
 function Func:process(event, output, state)
@@ -26,11 +23,10 @@ end
 -- Thru class
 --
 
-local Thru = sky.Device()
-Thru.__index = Thru
+local Thru = sky.Device:extend()
 
-function Thru.new()
-  return setmetatable({}, Thru)
+function Thru:new(props)
+  Thru.super.new(self, props)
 end
 
 --
@@ -39,15 +35,12 @@ end
 
 local tu = require('tabutil')
 
-local Logger = sky.Device()
-Logger.__index = Logger
+local Logger = sky.Device:extend()
 
-function Logger.new(props)
-  local o = setmetatable(props, Logger)
-  o.bypass = props.bypass or false
-  o.show_beats = props.show_beats or false
-  o.filter = props.filter or function(...) return false end
-  return o
+function Logger:new(props)
+  Logger.super.new(self, props)
+  self.show_beats = props.show_beats or false
+  self.filter = props.filter or function(...) return false end
 end
 
 function Logger:process(event, output, state)
@@ -69,14 +62,12 @@ end
 -- Map
 --
 
-local Map = sky.Device()
-Map.__index = Map
+local Map = sky.Device:extend()
 
-function Map.new(props)
-  local o = setmetatable(props, Map)
-  o.match = props.match or function(e) return false end
-  o.action = props.action or function(e) return e end
-  return o
+function Map:new(props)
+  Map.super.new(self, props)
+  self.match = props.match or function(e) return false end
+  self.action = props.action or function(e) return e end
 end
 
 function Map:process(event, output, state)
@@ -91,8 +82,8 @@ end
 -- module
 --
 return {
-  Func = Func.new,
-  Thru = Thru.new,
-  Logger = Logger.new,
-  Map = Map.new,
+  Func = Func,
+  Thru = Thru,
+  Logger = Logger,
+  Map = Map,
 }

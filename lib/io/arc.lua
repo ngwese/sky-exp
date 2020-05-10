@@ -3,15 +3,14 @@ local math = require('math')
 --
 -- ArcInput
 --
-local ArcInput = {}
-ArcInput.__index = ArcInput
+local ArcInput = sky.InputBase:extend()
 ArcInput.ARC_ENC_EVENT = 'ARC_ENC'
 
-function ArcInput.new(props)
-  local o = setmetatable(props, ArcInput)
-  o.arc = props.arc or arc.connect()
-  if o.arc then
-    o.arc.delta = function(...) o:on_enc_event(...) end
+function ArcInput:new(props)
+  ArcInput.super.new(self, props)
+  self.arc = props.arc or arc.connect()
+  if self.arc then
+    self.arc.delta = function(...) self:on_enc_event(...) end
   end
 end
 
@@ -30,22 +29,20 @@ end
 --
 -- ArcDialGesture
 --
-local ArcDialGesture = sky.Device()
-ArcDialGesture.__index = ArcDialGesture
+local ArcDialGesture = sky.Device:extend()
 ArcDialGesture.ARC_DIAL_EVENT = 'ARC_DIAL'
 
-function ArcDialGesture.new(props)
-  local o = setmetatable(props, ArcDialGesture)
+function ArcDialGesture:new(props)
+  ArcDialGesture.super.new(self, props)
   -- dial properties
-  o.which = props.which or 1
-  o.initial = props.initial or 0
-  o.min = props.min or 0
-  o.max = props.max or 1
-  o.steps = props.steps or 64
-  o.scale = props.scale or 0.25
+  self.which = props.which or 1
+  self.initial = props.initial or 0
+  self.min = props.min or 0
+  self.max = props.max or 1
+  self.steps = props.steps or 64
+  self.scale = props.scale or 0.25
   -- what is the dial value
-  o._value = o.initial
-  return o
+  self._value = self.initial
 end
 
 function ArcDialGesture:process(event, output, state)
@@ -73,20 +70,18 @@ end
 --
 -- ArcDialRender
 --
-local ArcDialRender = {}
-ArcDialRender.__index = ArcDialRender
+local ArcDialRender = sky.Object:extend()
 
 TWO_PI = math.pi * 2
 SLIM_WIDTH = TWO_PI / 64
 
-function ArcDialRender.new(props)
-  local o = setmetatable(props, ArcDialRender)
-  o.which = props.which or 1
-  o.where = props.where or o.which
-  o.width = props.width or SLIM_WIDTH
-  o.level = props.level or 8
-  o.mode = props.mode or 'pointer'
-  return o
+function ArcDialRender:new(props)
+  ArcDialRender.super.new(self, props)
+  self.which = props.which or 1
+  self.where = props.where or props.which
+  self.width = props.width or SLIM_WIDTH
+  self.level = props.level or 8
+  self.mode = props.mode or 'pointer'
 end
 
 function ArcDialRender:clear(props, which)
@@ -113,13 +108,15 @@ end
 --
 -- ArcDisplay
 --
-local ArcDisplay = {}
-ArcDisplay.__index = ArcDisplay
+local ArcDisplay = sky.Device:extend()
 
-function ArcDisplay.new(props)
-  local o = setmetatable(props, ArcDisplay)
-  o.arc = props.arc or arc.connect()
-  return o
+function ArcDisplay:new(props)
+  ArcDisplay.super.new(self, props)
+  self.arc = props.arc or arc.connect()
+  -- collect up the render objects
+  for i,v in ipairs(props) do
+    self[i] = v
+  end
 end
 
 function ArcDisplay:process(event, output, state)
@@ -133,10 +130,10 @@ function ArcDisplay:process(event, output, state)
 end
 
 return {
-  ArcInput = ArcInput.new,
-  ArcDialGesture = ArcDialGesture.new,
-  ArcDialRender = ArcDialRender.new,
-  ArcDisplay = ArcDisplay.new,
+  ArcInput = ArcInput,
+  ArcDialGesture = ArcDialGesture,
+  ArcDialRender = ArcDialRender,
+  ArcDisplay = ArcDisplay,
 
   -- constants
   TWO_PI = TWO_PI,

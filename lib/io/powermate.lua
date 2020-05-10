@@ -5,26 +5,24 @@ DEFAULT_HID_DEVICE_NAME = 'Griffin PowerMate'
 --
 -- PowerMateInput
 --
-local PowerMateInput = {}
-PowerMateInput.__index = PowerMateInput
+local PowerMateInput = sky.InputBase:extend()
 PowerMateInput.KEY_EVENT = 'PM_KEY'
 PowerMateInput.ENC_EVENT = 'PM_ENC'
 
-function PowerMateInput.new(props)
-  local o = setmetatable(props, PowerMateInput)
-
-  if not o.device then
-    o.name = props.name or DEFAULT_HID_DEVICE_NAME
+function PowerMateInput:new(props)
+  PowerMateInput.super.new(self, props)
+  if not props.device then
+    props.name = props.name or DEFAULT_HID_DEVICE_NAME
     for i,v in ipairs(hid.vports) do
-      if sky.starts_with(v.name, o.name) then
-        o.device = pm.connect(i)
+      if sky.starts_with(v.name, props.name) then
+        self.device = pm.connect(i)
       end
     end
   end
 
-  if o.device then
-    o.device.key = function(...) o:on_key_event(...) end
-    o.device.enc = function(...) o:on_enc_event(...) end
+  if self.device then
+    self.device.key = function(...) self:on_key_event(...) end
+    self.device.enc = function(...) self:on_enc_event(...) end
   end
 end
 
@@ -49,7 +47,7 @@ function PowerMateInput:on_enc_event(num, delta)
 end
 
 return {
-  PowerMateInput = PowerMateInput.new,
+  PowerMateInput = PowerMateInput,
 }
 
 

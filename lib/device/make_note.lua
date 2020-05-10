@@ -1,11 +1,9 @@
-local MakeNote = sky.Device()
-MakeNote.__index = MakeNote
+local MakeNote = sky.Device:extend()
 
-function MakeNote.new(o)
-  local o = setmetatable(o or {}, MakeNote)
-  o.duration = o.duration or 1/16
-  o._scheduler = nil
-  return o
+function MakeNote:new(props)
+  MakeNote.super.new(self, props)
+  self.duration = props.duration or 1/16
+  self._scheduler = nil
 end
 
 function MakeNote:device_inserted(chain)
@@ -53,5 +51,5 @@ function MakeNote:process(event, output, state)
 end
 
 return {
-  MakeNote = MakeNote.new,
+  MakeNote = MakeNote,
 }

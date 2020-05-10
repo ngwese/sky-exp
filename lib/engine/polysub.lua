@@ -9,16 +9,14 @@ local glue = include('we/lib/polysub')
 
 local Singleton = nil
 
-local PolySub = sky.Device()
-PolySub.__index = PolySub
+local PolySub = sky.Device:extend()
 
-function PolySub.new(props)
-  local o = setmetatable(props, PolySub)
+function PolySub:new(props)
+  PolySub.super.new(self, props)
   -- MAINT: params aren't owned so it is hard to remove
   glue.params()
-  o.next_voice = 1
-  o.voices = {}
-  return o
+  self.next_voice = 1
+  self.voices = {}
 end
 
 function PolySub:process(event, output, state)
@@ -42,7 +40,7 @@ end
 
 local function shared_instance(props)
   if Singleton == nil then
-    Singleton = PolySub.new(props)
+    Singleton = PolySub(props)
   end
   return Singleton
 end

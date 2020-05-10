@@ -9,7 +9,7 @@ sky.use('sky/lib/engine/polysub')
 local halfsecond = include('awake/lib/halfsecond')
 
 logger = sky.Logger{
-  bypass = true,
+  bypass = false,
 }
 
 out1 = sky.Switcher{
@@ -22,7 +22,7 @@ chain = sky.Chain{
   sky.Held{ debug = true },        -- track held notes, emit on change
   sky.Pattern{ debug = true },     -- generate pattern when held notes change
   sky.Arp{},                       -- generate notes from pattern
-  sky.MakeNote{ duration = 1/16 }, -- make note duration a 16th 
+  sky.MakeNote{ duration = 1/16 }, -- make note duration a 16th
   logger,
   out1,
 }

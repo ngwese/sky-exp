@@ -4,13 +4,10 @@
 
 local types = sky.types
 
-local Behavior = sky.Device()
-Behavior.__index = Behavior
+local Behavior = sky.Device:extend()
 
-function Behavior.new(o)
-  local o = setmetatable(o or {}, Behavior)
-  o.bypass = false
-  return o
+function Behavior:new(props)
+  Behavior.super.new(self, props)
 end
 
 function Behavior:process(event, output)
@@ -52,5 +49,5 @@ function Behavior:process(event, output)
 end
 
 return {
-  Behavior = Behavior.new,
+  Behavior = Behavior,
 }

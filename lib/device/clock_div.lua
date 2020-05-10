@@ -2,19 +2,17 @@
 -- ClockDiv
 --
 
-local ClockDiv = sky.Device()
-ClockDiv.__index = ClockDiv
+local ClockDiv = sky.Device:extend()
 
-function ClockDiv.new(o)
-  local o = setmetatable(o or {}, ClockDiv)
-  o.div = o.div or 1
+function ClockDiv:new(props)
+  ClockDiv.super.new(self, props)
+  self.div = props.div or 1
   -- TODO: allow targeting of a single channel
   -- TODO: follow START, STOP, RESET events to (re)sync div
   -- TODO: catch assignment to "div" and reset sync? (need to move div
   --       into a props table in order to take advantage of __newindex
 
   -- TODO: external midi clock sync
-  return o
 end
 
 function ClockDiv:process(event, output)
@@ -28,5 +26,5 @@ function ClockDiv:process(event, output)
 end
 
 return {
-  ClockDiv = ClockDiv.new
+  ClockDiv = ClockDiv,
 }

@@ -1,19 +1,14 @@
 --
 -- Switcher class
 --
-local Switcher = sky.Device()
-Switcher.__index = Switcher
+local Switcher = sky.Device:extend()
 
-function Switcher.new(o)
-  local o = setmetatable(o or {}, Switcher)
-
-  -- defaults
-  o.which = o.which or 1
-  if type(o.enabled) ~= "boolean" then
-    o.enabled = true
+function Switcher:new(props)
+  Switcher.super.new(self, props)
+  self.which = props.which or 1
+  for i, child in ipairs(props) do
+    self[i] = child
   end
-
-  return o
 end
 
 function Switcher:process(event, output, state)
@@ -24,5 +19,5 @@ function Switcher:process(event, output, state)
 end
 
 return {
-  Switcher = Switcher.new,
+  Switcher = Switcher,
 }

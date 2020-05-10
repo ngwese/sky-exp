@@ -3,16 +3,15 @@ local table = require('table')
 --
 -- GridInput
 --
-local GridInput = {}
-GridInput.__index = GridInput
+local GridInput = sky.InputBase:extend()
 GridInput.GRID_KEY_EVENT = 'GRID_KEY'
 
-function GridInput.new(props)
-  local o = setmetatable(props, GridInput)
-  o.grid = props.grid or grid.connect()
-  if o.grid then
-    o.grid.key = function(x, y, s)
-      o:on_key_event(x, y, s)
+function GridInput:new(props)
+  GridInput.super.new(self, props)
+  self.grid = props.grid or grid.connect()
+  if self.grid then
+    self.grid.key = function(x, y, s)
+      self:on_key_event(x, y, s)
     end
   end
 end
@@ -32,13 +31,14 @@ end
 --
 -- GridDisplay
 --
-local GridDisplay = sky.Device()
-GridDisplay.__index = GridDisplay
+local GridDisplay = sky.Device:extend()
 
-function GridDisplay.new(props)
-  local o = setmetatable(props, GridDisplay)
-  o.grid = props.grid or grid.connect()
-  return o
+function GridDisplay:new(props)
+  GridDisplay.super.new(self, props)
+  self.grid = props.grid or grid.connect()
+  for i, child in ipairs(props) do
+    self[i] = child
+  end
 end
 
 function GridDisplay:process(event, output, state)
@@ -54,13 +54,14 @@ end
 --
 -- GridGestureRegion
 --
-local GridGestureRegion = {}
-GridGestureRegion.__index = GridGestureRegion
+local GridGestureRegion = sky.Device:extend()
 
-function GridGestureRegion.new(props)
-  local o = setmetatable(props, GridGestureRegion)
-  o.bounds = props.bounds or {1,1,16,8}
-  return o
+function GridGestureRegion:new(props)
+  GridGestureRegion.super.new(self, props)
+  self.bounds = props.bounds or {1,1,16,8}
+  for i, child in ipairs(self) do
+    self[i] = child
+  end
 end
 
 function GridGestureRegion:in_bounds(key_event)
@@ -91,9 +92,9 @@ function GridGestureRegion:process(event, output, state)
 end
 
 return {
-  GridInput = GridInput.new,
-  GridDisplay = GridDisplay.new,
-  GridGestureRegion = GridGestureRegion.new,
+  GridInput = GridInput,
+  GridDisplay = GridDisplay,
+  GridGestureRegion = GridGestureRegion,
   -- exported event types
   GRID_KEY_EVENT = GridInput.GRID_KEY_EVENT,
 }

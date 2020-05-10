@@ -2,14 +2,11 @@
 -- Transpose (midi semitones)
 --
 
-local Transpose = sky.Device()
-Transpose.__index = Transpose
+local Transpose = sky.Device:extend()
 
-function Transpose.new(o)
-  local o = setmetatable(o, Transpose)
-  o.bypass = false
-  o.semitones = o.semitones or 12
-  return o
+function Transpose:new(props)
+  Transpose.super.new(self, props)
+  self.semitones = props.semitones or 12
 end
 
 function Transpose:process(event, output)
@@ -23,5 +20,5 @@ function Transpose:process(event, output)
 end
 
 return {
-  Transpose = Transpose.new,
+  Transpose = Transpose,
 }

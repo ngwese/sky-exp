@@ -56,15 +56,11 @@ function Note:off(event)
   return self
 end
 
-local Process = sky.Device()
-Process.__index = Process
+local Process = sky.Device:extend()
 
-function Process.new(proto)
-  local o = setmetatable(proto or {}, Process)
-  -- defaults
-  o.notes = {}
-  o.bypass = false
-  return o
+function Process:new(proto)
+  Process.super.new(self, proto)
+  self.notes = {}
 end
 
 function Process:process(event, output, state)
@@ -109,5 +105,5 @@ end
 
 return {
   Note = Note.new,
-  Process = Process.new,
+  Process = Process,
 }

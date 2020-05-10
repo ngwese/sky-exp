@@ -6,15 +6,13 @@ local WatchTable = include('sky/lib/container/watchtable')
 --
 -- CrowVoice
 --
-local CrowVoice = sky.Device()
-CrowVoice.__index = CrowVoice
+local CrowVoice = sky.Device:extend()
 
-function CrowVoice.new(props)
-  local o = setmetatable(props, CrowVoice)
+function CrowVoice:new(props)
+  CrowVoice.super.new(self, props)
   -- crow.connected() always returns false?
-  o:_clear()
-  o.held = 0
-  return o
+  self:_clear()
+  self.held = 0
 end
 
 function CrowVoice:_clear()
@@ -53,8 +51,8 @@ local Watch
 -- CrowShape
 --
 
-local CrowShape = sky.Device()
-CrowShape.__index = CrowShape
+-- FIXME: this is broken w/ the new object model
+local CrowShape = sky.Device:extend()
 
 function CrowShape.new(shapes)
   local o = {}
@@ -95,8 +93,8 @@ end
 
 
 return {
-  CrowVoice = CrowVoice.new,
-  CrowShape = CrowShape.new,
+  CrowVoice = CrowVoice,
+  CrowShape = CrowShape,
 }
 
 

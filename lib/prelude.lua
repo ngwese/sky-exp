@@ -21,6 +21,7 @@ function sky.use(path, reload)
   return sky.__loaded[path]
 end
 
+sky.use('sky/lib/core/object')
 sky.use('sky/lib/core/event')
 sky.use('sky/lib/core/process')
 sky.use('sky/lib/device/utility') -- needed by Chain

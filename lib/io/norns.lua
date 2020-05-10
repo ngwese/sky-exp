@@ -1,8 +1,7 @@
 --
 -- NornsInput
 --
-local NornsInput = {}
-NornsInput.__index = NornsInput
+local NornsInput = sky.InputBase:extend()
 NornsInput.KEY_EVENT = 'KEY'
 NornsInput.ENC_EVENT = 'ENC'
 NornsInput.REDRAW_EVENT = 'REDRAW'
@@ -27,15 +26,14 @@ local function has_focus()
   return redraw == do_redraw
 end
 
-function NornsInput.new(props)
-  local o = setmetatable(props or {}, NornsInput)
+function NornsInput:new(props)
+  NornsInput.super.new(self, props)
   -- note this (re)defined script global handlers
   key = do_key
   enc = do_enc
   redraw = do_redraw
 
-  o._redraw_event = o.mk_redraw()
-  return o
+  self._redraw_event = self.mk_redraw()
 end
 
 function NornsInput.mk_key(num, z)
@@ -76,7 +74,7 @@ end
 
 local function shared_input(props)
   if SingletonInput == nil then
-    SingletonInput = NornsInput.new(props)
+    SingletonInput = NornsInput(props)
   end
   return SingletonInput
 end
@@ -84,13 +82,12 @@ end
 --
 -- NornsDisplay
 --
-local NornsDisplay = sky.Device()
-NornsDisplay.__index = NornsDisplay
+local NornsDisplay = sky.Device:extend()
 
 local SingletonDisplay = nil
 
-function NornsDisplay.new(props)
-  return setmetatable(props or {}, NornsDisplay)
+function NornsDisplay:new(props)
+  NornsDisplay.super.new(self, props)
 end
 
 function NornsDisplay:process(event, output, state)
@@ -116,7 +113,7 @@ end
 
 local function shared_display(props)
   if SingletonDisplay == nil then
-    SingletonDisplay = NornsDisplay.new(props)
+    SingletonDisplay = NornsDisplay(props)
   end
   return SingletonDisplay
 end

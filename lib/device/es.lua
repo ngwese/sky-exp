@@ -42,16 +42,14 @@ end
 --
 -- esNoteGesture
 --
-local esNoteGesture = sky.Device()
-esNoteGesture.__index = esNoteGesture
+local esNoteGesture = sky.Device:extend()
 esNoteGesture.EVENT = esNoteGesture
 
-function esNoteGesture.new(props)
-  local o = setmetatable(props, esNoteGesture)
-  o.root = props.root or ES_DEFAULT_ROOT_NOTE-- midi note number
-  o.vel = props.vel or 127
-  o.ch = props.ch or 1
-  return o
+function esNoteGesture:new(props)
+  esNoteGesture.super.new(self, props)
+  self.root = props.root or ES_DEFAULT_ROOT_NOTE-- midi note number
+  self.vel = props.vel or 127
+  self.ch = props.ch or 1
 end
 
 function esNoteGesture:process(event, output, props)
@@ -73,14 +71,12 @@ end
 --
 -- esShapeGesture
 --
-local esShapeGesture = sky.Device()
-esShapeGesture.__index = esShapeGesture
+local esShapeGesture = sky.Device:extend()
 esShapeGesture.EVENT = 'ES_SHAPE'
 
-function esShapeGesture.new(props)
-  local o = setmetatable(props, esShapeGesture)
-  o._held = Deque.new()
-  return o
+function esShapeGesture:new(props)
+  esShapeGesture.super.new(self, props)
+  self._held = Deque.new()
 end
 
 function esShapeGesture.match_key_event(a, b)
@@ -155,21 +151,19 @@ end
 --
 -- esNoteRender
 --
-local esNoteRender = sky.Device()
-esNoteRender.__index = esNoteRender
+local esNoteRender = sky.Object:extend()
 
-function esNoteRender.new(props)
-  local o = setmetatable(props, esNoteRender)
+function esNoteRender:new(props)
+  esNoteRender.super.new(self, props)
   -- led brightness levels
-  o.note_level = props.note_level or 7
-  o.key_level = props.key_level or 15
+  self.note_level = props.note_level or 7
+  self.key_level = props.key_level or 15
   -- position
-  o.root = props.root or ES_DEFAULT_ROOT_NOTE
-  o:set_bounds(props.bounds or ES_DEFAULT_BOUNDS)
+  self.root = props.root or ES_DEFAULT_ROOT_NOTE
+  self:set_bounds(props.bounds or ES_DEFAULT_BOUNDS)
   -- held grid key state
-  o._key_held = {}
-  o._note_held = {}
-  return o
+  self._key_held = {}
+  self._note_held = {}
 end
 
 function esNoteRender:set_bounds(bounds)
@@ -209,9 +203,9 @@ end
 --
 
 return {
-  esNoteGesture = esNoteGesture.new,
-  esShapeGesture = esShapeGesture.new,
-  esNoteRender = esNoteRender.new,
+  esNoteGesture = esNoteGesture,
+  esShapeGesture = esShapeGesture,
+  esNoteRender = esNoteRender,
 
   -- events
   ES_SHAPE_EVENT = esShapeGesture.EVENT,

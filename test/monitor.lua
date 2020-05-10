@@ -1,14 +1,13 @@
 include('sky/lib/prelude')
 
-engine.name = 'SimplePassThru'
-
 local chain = sky.Chain{
   sky.Logger{},
   sky.Output{ device = midi.connect(2) },
 }
 
-local source = sky.Input{
+source = sky.Input{
   device = midi.connect(1),
+  -- name = "AXIS-64",
   chain = chain,
 }
 

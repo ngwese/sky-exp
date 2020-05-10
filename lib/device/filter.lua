@@ -2,21 +2,20 @@
 -- Filter
 --
 
-local Filter = sky.Device()
-Filter.__index = Filter
+local Filter = sky.Device:extend()
 
-function Filter.new(o)
-  local o = setmetatable(o or {}, Filter)
-  o._match = {}
-  o.types = o.types or {}
+function Filter:new(props)
+  Filter.super.new(self, props)
+  self._match = {}
+  self.types = prop.types or {}
   -- FIXME: __newindex isn't updating table, BROKEN move stuff to props
-  o:_build_type_table(o.types)
+  self:_build_type_table(self.types)
 
-  if type(o.invert) ~= 'boolean' then
-    o.invert = false
+  if type(props.invert) == 'boolean' then
+    self.invert = props.invert
+  else
+    self.invert = false
   end
-  o.bypass = false
-  return o
 end
 
 function Filter:__newindex(idx, val)
@@ -52,6 +51,6 @@ function Filter:process(event, output)
 end
 
 return {
-  Filter = Filter.new,
+  Filter = Filter,
 }
 

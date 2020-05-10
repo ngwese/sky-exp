@@ -21,10 +21,11 @@ end
 -- Clock coroutines
 --
 
-local _fixed = function (this, yield, interval)
+local _fixed = function(this, yield, interval)
   this:emit_start()
+  yield(1) -- initial sync to beat?
   while true do
-    print(this, interval)
+    --print(this, interval)
     this:emit_tick()
     yield(interval)
   end
@@ -32,8 +33,9 @@ end
 
 local _iterable = function(this, yield, auto_stop, ...)
   this:emit_start()
+  yield(1) -- initial sync to beat?
   for i, interval in ... do
-    print(this, i, interval)
+    --print(this, i, interval)
     this:emit_tick()
     yield(interval)
   end
@@ -46,16 +48,14 @@ end
 -- Clock
 --
 
-local Clock = {}
-Clock.__index = Clock
+local Clock = sky.InputBase:extend()
 
-function Clock.new(o)
-  local o = setmetatable(o or {}, Clock)
-  o.groove = o.groove -- TODO: should interval just be a groove of one element?
-  o.interval = o.interval or 0.5
-  o._tick = 0
-  o._id = nil
-  return o
+function Clock:new(props)
+  Clock.super.new(self, props)
+  self.groove = props.groove -- TODO: should interval just be a groove of one element?
+  self.interval = props.interval or 0.5
+  self._tick = 0
+  self._id = nil
 end
 
 function Clock:_cancel()
@@ -126,7 +126,7 @@ function Clock:emit_tick()
 end
 
 return {
-  Clock = Clock.new,
+  Clock = Clock,
 
   -- for debugging
   __CLOCKS = CLOCKS,

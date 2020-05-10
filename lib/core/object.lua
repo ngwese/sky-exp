@@ -62,9 +62,9 @@ function Object:is(T)
   return false
 end
 
-function Object:__tostring()
-  return "Object"
-end
+-- function Object:__tostring()
+--   return "Object"
+-- end
 
 function Object:__call(...)
   local obj = setmetatable({}, self)

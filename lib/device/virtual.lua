@@ -30,15 +30,13 @@ end
 -- Receive
 --
 
-local Receive = sky.Device()
-Receive.__index = Receive
+local Receive = sky.Device:extend()
 
-function Receive.new(sender_name)
-  local o = setmetatable({}, Receive)
-  o.from = sender_name
-  _add(o.from, o)
-  o._scheduler = nil
-  return o
+function Receive:new(sender_name)
+  Receive.super.new(self)
+  self.from = sender_name
+  _add(self.from, self)
+  self._scheduler = nil
 end
 
 function Receive:device_inserted(chain)
@@ -67,13 +65,11 @@ end
 -- Send
 --
 
-local Send = sky.Device()
-Send.__index = Send
+local Send = sky.Device:extend()
 
-function Send.new(name)
-  local o = setmetatable({}, Send)
-  o.to = name
-  return o
+function Send:new(name)
+  Send.super.new(self)
+  self.to = name
 end
 
 function Send:process(event, output, state)
@@ -90,13 +86,11 @@ end
 -- Forward
 --
 
-local Forward = sky.Device()
-Forward.__index = Forward
+local Forward = sky.Device:extend()
 
-function Forward.new(chain)
-  local o = setmetatable({}, Forward)
-  o.chain = chain
-  return o
+function Forward:new(chain)
+  Forward.super.new(self)
+  self.chain = chain
 end
 
 function Forward:process(event, output, state)
@@ -111,9 +105,9 @@ end
 --
 
 return {
-  Receive = Receive.new,
-  Send = Send.new,
-  Forward = Forward.new,
+  Receive = Receive,
+  Send = Send,
+  Forward = Forward,
 }
 
 
