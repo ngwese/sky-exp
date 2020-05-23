@@ -89,7 +89,7 @@ function PageRouter:select_page(name, props)
   self.active:enter(props or {})
 end
 
-function PageRouter:process_router()
+function PageRouter:event_router()
   return function(event, output, state)
     if self.active ~= nil then
       self.active:process(event, output, state, self._props)
