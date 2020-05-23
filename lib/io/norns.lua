@@ -7,6 +7,7 @@ NornsInput.ENC_EVENT = 'ENC'
 NornsInput.REDRAW_EVENT = 'REDRAW'
 
 local SingletonInput = nil
+local is_focused = true
 
 local function do_key(...)
   if SingletonInput then SingletonInput:on_key_event(...) end
@@ -23,7 +24,12 @@ end
 local function has_focus()
   -- test to see if our redraw method has been replaced, if so we've lost focus
   -- and the menu taken over redraw
-  return redraw == do_redraw
+  return redraw == do_redraw and is_focused
+end
+
+-- helpers to control enable/disable redraw explictly
+local function set_focus(bool)
+  is_focused = bool
 end
 
 function NornsInput:new(props)
@@ -125,6 +131,10 @@ end
 return {
   NornsInput = shared_input,
   NornsDisplay = shared_display,
+
+  -- low level drawing focus controls
+  has_focus = has_focus,
+  set_focus = set_focus,
 
   -- events
   mk_key = NornsInput.mk_key,
