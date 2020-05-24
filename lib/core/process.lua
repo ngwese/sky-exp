@@ -55,30 +55,40 @@ function Input:new(props)
   Input.super.new(self, props)
 
   -- determine which device to use
-  self.device = props.device
-  if self.device == nil then
+  local d = props.device
+  if d == nil then
     if props.name then
       -- attempt to find the midi device by name
       for i,v in ipairs(midi.vports) do
         if sky.starts_with(v.name, props.name) then
-          self.device = midi.connect(i)
+          d = midi.connect(i)
           self.name = props.name
         end
       end
     else
-      self.device = midi.connect(1)
+      d = midi.connect(1)
     end
   end
+
+  self:set_device(d)
 
   if self.device == nil then
     local n = self.name or "<none>"
     print("warning: input not connected to device " .. n)
-    return
   end
+end
 
-  -- install device event handler
-  self.device.event = function(data)
-    self:on_midi_event(data)
+function Input:set_device(device)
+  if device ~= nil then
+    -- clean up callbacks if need be
+    if self.device ~= nil then
+      self.device.event = nil
+    end
+    self.device = device
+    -- install device event handler
+    self.device.event = function(data)
+      self:on_midi_event(data)
+    end
   end
 end
 
@@ -122,19 +132,22 @@ function Output:new(props)
   Output.super.new(self, props)
 
   -- determine which device to use
-  if not props.device then
+  local d = props.device
+  if d == nil then
     if props.name then
       -- attempt to find the midi device by name
       for i,v in ipairs(midi.vports) do
         if sky.starts_with(v.name, props.name) then
-          self.device = midi.connect(i)
+          d = midi.connect(i)
           self.name = props.name
         end
       end
     else
-      self.device = midi.connect(2)
+      d = midi.connect(2)
     end
   end
+
+  self:set_device(d)
 
   if self.device == nil then
     local n = self.name or "<none>"
@@ -144,6 +157,10 @@ function Output:new(props)
   if type(props.enabled) ~= "boolean" then
     self.enabled = true
   end
+end
+
+function Output:set_device(device)
+  self.device = device
 end
 
 function Output:process(event, output)
