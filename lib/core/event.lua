@@ -34,8 +34,8 @@ local type_names = invert(types)
 -- event creation (compatible with midi:send(...))
 --
 
-local function mk_note_on(note, vel, ch)
-  return { type = types.NOTE_ON, ch = ch or 1, note = note, vel = vel }
+local function mk_note_on(note, vel, ch, duration)
+  return { type = types.NOTE_ON, ch = ch or 1, note = note, vel = vel, duration = duration }
 end
 
 local function mk_note_off(note, vel, ch)
