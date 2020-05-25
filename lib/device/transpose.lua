@@ -6,7 +6,7 @@ local Transpose = sky.Device:extend()
 
 function Transpose:new(props)
   Transpose.super.new(self, props)
-  self.semitones = props.semitones or 12
+  self.semitones = props.semitones or 0
 end
 
 function Transpose:process(event, output)
