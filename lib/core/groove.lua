@@ -1,3 +1,16 @@
+
+-- reference: https://en.wikipedia.org/wiki/Swing_(jazz_performance_style)
+local Swing = {}
+Swing.__index = Swing
+
+function Swing.new(o)
+  local o = setmetatable(o, Groove)
+  o.range = o.range or 1/4
+  o.amount = o.amount or 0
+  return o
+end
+
+
 local Groove = {}
 Groove.__index = Groove
 
@@ -27,4 +40,5 @@ end
 
 return {
   Groove = Groove,
+  Swing = Swing,
 }
