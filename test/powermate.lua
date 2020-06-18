@@ -1,7 +1,7 @@
 include('sky/lib/prelude')
 sky.use('sky/lib/io/powermate')
 
-local source = sky.PowerMateInput{
+source = sky.PowerMateInput{
   chain = sky.Chain{ sky.Logger{} },
 }
 
